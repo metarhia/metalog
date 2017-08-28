@@ -1,10 +1,10 @@
 'use strict';
 
 const tap = require('tap');
-const metasync = require('..');
+const metalog = require('..');
 
 tap.test('stub', (test) => {
-  if (metasync) {
+  if (metalog) {
     test.end();
   }
 });
