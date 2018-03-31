@@ -5,10 +5,11 @@ const metalog = require('..');
 
 tap.test('stub', (test) => {
   const logger = metalog('./log', 'S1N1');
-  logger.open(() => {
+  logger.on('open', () => {
     logger.info('Test log message');
-    logger.close(() => {
-      test.end();
-    });
+    logger.close();
+  });
+  logger.on('close', () => {
+    test.end();
   });
 });

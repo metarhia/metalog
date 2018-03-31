@@ -33,11 +33,12 @@ function Logger(
   this.lock = false;
   this.buffer = [];
   this.file = '';
+  this.open();
 }
 
 util.inherits(Logger, events.EventEmitter);
 
-Logger.prototype.open = function(callback) {
+Logger.prototype.open = function() {
   const date = common.nowDate();
   this.file = this.path + '/' + date + '-' + this.nodeId + '.log';
   const now = new Date();
@@ -52,24 +53,26 @@ Logger.prototype.open = function(callback) {
   }, this.writeInterval);
   this.stream.on('open', () => {
     this.active = true;
-    callback();
+    this.emit('open');
   });
-  this.stream.on('error', callback);
+  this.stream.on('error', (err) => {
+    this.emit('error', new Error('Can\'t open log file:' + this.file));
+    throw err;
+  });
 };
 
-Logger.prototype.close = function(callback) {
-  this.flush(() => {
-    if (this.stream.destroyed || this.stream.closed) return;
+Logger.prototype.close = function() {
+  //if (this.stream.destroyed || this.stream.closed) return;
+  this.flush((err) => {
+    if (err) return;
     this.stream.end(() => {
       this.active = false;
       clearInterval(this.flushTimer);
       clearTimeout(this.reopenTimer);
+      this.emit('close');
       fs.stat(this.file, (err, stats) => {
-        if (err || stats.size > 0) {
-          callback(err);
-          return;
-        }
-        fs.unlink(this.file, callback);
+        if (err || stats.size > 0) return;
+        fs.unlink(this.file);
       });
     });
   });
