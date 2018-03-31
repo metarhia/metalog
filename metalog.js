@@ -4,14 +4,8 @@ const fs = require('fs');
 const util = require('util');
 const events = require('events');
 const common = require('metarhia-common');
-// const concolor = require('concolor');
-// const metasync = require('metasync');
 
 const DAY_MILLISECONDS = common.duration('1d');
-
-//const cError = concolor('b,red');
-//const cDebug = concolor('b,green');
-//const cWarn = concolor('b,yellow');
 
 function Logger(
   path, // log directory
