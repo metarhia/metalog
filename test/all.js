@@ -63,10 +63,11 @@ tap.test('logger.close', (test) => {
 });
 
 tap.test('logger.close after close', (test) => {
-  logger.close();
+  logger.removeAllListeners('close');
   logger.on('close', () => {
     test.notOk();
   });
+  logger.close();
   test.end();
 });
 
