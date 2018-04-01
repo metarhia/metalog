@@ -7,19 +7,19 @@ const common = require('metarhia-common');
 
 const DAY_MILLISECONDS = common.duration('1d');
 
-function Logger(
+function Logger({
   path, // log directory
   nodeId, // nodeId
-  writeInterval = 3000, // Flush log to disk interval
-  writeBuffer = 64 * 1024, // Buffer size 64kb
-  keepDays = 100 // Delete files after N days, 0 to disable
-) {
+  writeInterval, // Flush log to disk interval
+  writeBuffer, // Buffer size 64kb
+  keepDays // Delete files after N days, 0 to disable
+}) {
   this.active = false;
   this.path = path;
   this.nodeId = nodeId;
-  this.keepDays = keepDays;
-  this.writeInterval = writeInterval;
-  this.writeBuffer = writeBuffer;
+  this.writeInterval = writeInterval || 3000;
+  this.writeBuffer = writeBuffer || 64 * 1024;
+  this.keepDays = keepDays || 0;
   this.options = { flags: 'a', highWaterMark: this.writeBuffer };
   this.stream = null;
   this.reopenTimer = null;
@@ -56,7 +56,8 @@ Logger.prototype.open = function() {
 };
 
 Logger.prototype.close = function() {
-  //if (this.stream.destroyed || this.stream.closed) return;
+  const stream = this.stream;
+  if (!stream || stream.destroyed || stream.closed) return;
   this.flush((err) => {
     if (err) return;
     this.stream.end(() => {
@@ -73,6 +74,7 @@ Logger.prototype.close = function() {
 };
 
 Logger.prototype.rotate = function() {
+  if (!this.keepDays) return;
   fs.readdir(this.path, (err, files) => {
     if (err) return;
     const now = new Date();
@@ -85,7 +87,7 @@ Logger.prototype.rotate = function() {
       fileName = files[i];
       fileTime = new Date(fileName.substring(0, 10)).getTime();
       fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
-      if (fileAge > 1 && fileAge > this.keepDays) {
+      if (fileAge > 1 && fileAge > this.keepDays - 1) {
         fs.unlink(this.path + '/' + fileName, common.emptiness);
       }
     }
@@ -132,4 +134,4 @@ Logger.prototype.flush = function(callback) {
   });
 };
 
-module.exports = (...args) => new Logger(...args);
+module.exports = (args) => new Logger(args);
