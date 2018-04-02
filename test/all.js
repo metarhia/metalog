@@ -11,14 +11,6 @@ const logger = metalog({
   keepDays: 5
 });
 
-tap.test('logger.close before open', (test) => {
-  logger.close();
-  logger.on('close', () => {
-    test.notOk();
-  });
-  test.end();
-});
-
 tap.test('logger.open', (test) => {
   logger.on('open', () => {
     test.end();
@@ -52,6 +44,24 @@ tap.test('logger.info', (test) => {
 tap.test('logger.debug', (test) => {
   logger.debug('Test log message');
   test.end();
+});
+
+tap.test('logger write more then 60Mb', (test) => {
+  logger.removeAllListeners('open');
+  const begin = process.hrtime();
+  for (let i = 0; i < 1000000; i++) {
+    logger.info('Write more then 60Mb logs, line: ' + i);
+  }
+  logger.close();
+  logger.on('close', () => {
+    const end = process.hrtime(begin);
+    const time = end[0] * 1e9 + end[1];
+    logger.open();
+    logger.on('open', () => {
+      logger.info(time);
+      test.end();
+    });
+  });
 });
 
 tap.test('logger.close', (test) => {
