@@ -20,8 +20,8 @@ function Logger({
   this.writeInterval = writeInterval || 3000;
   this.writeBuffer = writeBuffer || 64 * 1024;
   this.keepDays = keepDays || 0;
-  this.options = { flags: 'a', highWaterMark: this.writeBuffer };
-  this.stream = null;
+  this.fd = 0;
+  this.buffered = 0;
   this.reopenTimer = null;
   this.flushTimer = null;
   this.lock = false;
@@ -33,40 +33,46 @@ function Logger({
 util.inherits(Logger, events.EventEmitter);
 
 Logger.prototype.open = function() {
+  if (this.active) return;
   const date = common.nowDate();
   this.file = this.path + '/' + date + '-' + this.nodeId + '.log';
   const now = new Date();
   const nextDate = new Date();
   nextDate.setUTCHours(0, 0, 0, 0);
   const nextReopen = nextDate - now + DAY_MILLISECONDS;
-  this.reopenTimer = setTimeout(this.open, nextReopen);
+  this.reopenTimer = setTimeout(() => {
+    this.open();
+  }, nextReopen);
+  fs.open(this.file, 'a', (err, fd) => {
+    if (err) {
+      this.emit('error', new Error('Can\'t open log file:' + this.file));
+    } else {
+      this.fd = fd;
+      this.active = true;
+      this.emit('open');
+    }
+    this.flushTimer = setInterval(() => {
+      this.flush();
+    }, this.writeInterval);
+  });
   if (this.keepDays) this.rotate();
-  this.stream = fs.createWriteStream(this.file, this.options);
-  this.flushTimer = setInterval(() => {
-    this.flush();
-  }, this.writeInterval);
-  this.stream.on('open', () => {
-    this.active = true;
-    this.emit('open');
-  });
-  this.stream.on('error', (err) => {
-    this.emit('error', new Error('Can\'t open log file:' + this.file));
-    throw err;
-  });
 };
 
 Logger.prototype.close = function() {
-  const stream = this.stream;
-  if (!stream || stream.destroyed || stream.closed) return;
+  const fd = this.fd;
+  if (!fd) return;
   this.flush((err) => {
     if (err) return;
-    this.stream.end(() => {
-      this.active = false;
-      clearInterval(this.flushTimer);
-      clearTimeout(this.reopenTimer);
-      this.emit('close');
-      fs.stat(this.file, (err, stats) => {
-        if (err || stats.size > 0) return;
+    fs.fstat(fd, (err, stats) => {
+      if (err) return;
+      fs.close(fd, (err) => {
+        if (err) return;
+        this.active = false;
+        this.fd = 0;
+        clearInterval(this.flushTimer);
+        clearTimeout(this.reopenTimer);
+        this.emit('close');
+        if (stats.size > 0) return;
         fs.unlink(this.file);
       });
     });
@@ -118,17 +124,28 @@ Logger.prototype.write = function(message) {
   const data = new Date().toISOString() + '\t' + message + '\n';
   const buffer = Buffer.from(data);
   this.buffer.push(buffer);
+  this.buffered += buffer.length;
+  if (this.buffered > this.writeBuffer) {
+    process.nextTick(() => {
+      this.flush();
+    });
+  }
 };
 
 Logger.prototype.flush = function(callback) {
-  if (!this.active || this.lock || !this.buffer.length) {
+  if (!this.active || this.lock) {
     if (callback) callback(new Error('Can\'t flush log buffer'));
+    return;
+  }
+  if (!this.buffer.length) {
+    if (callback) callback();
     return;
   }
   this.lock = true;
   const buffer = Buffer.concat(this.buffer);
   this.buffer.length = 0;
-  this.stream.write(buffer, (err) => {
+  this.buffered = 0;
+  fs.write(this.fd, buffer, (err) => {
     this.lock = false;
     if (callback) callback(err);
   });
