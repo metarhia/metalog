@@ -40,12 +40,7 @@ Logger.prototype.open = function() {
   const nextReopen = nextDate - now + DAY_MILLISECONDS;
   this.reopenTimer = setTimeout(this.open, nextReopen);
   this.stream = fs.createWriteStream(this.file, this.options);
-  this.flushTimer = setInterval(() => {
-    if (this.corked) {
-      this.corked = false;
-      this.stream.uncork();
-    }
-  }, this.writeInterval);
+  this.flushTimer = setInterval(this.fetch, this.writeInterval);
   this.stream.on('open', () => {
     this.active = true;
     this.emit('open');
@@ -126,6 +121,13 @@ Logger.prototype.write = function(message) {
   }
   const res = this.stream.write(data);
   if (!res) {
+    this.corked = false;
+    this.stream.uncork();
+  }
+};
+
+Logger.prototype.fetch = function() {
+  if (this.corked) {
     this.corked = false;
     this.stream.uncork();
   }
