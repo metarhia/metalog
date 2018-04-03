@@ -172,12 +172,14 @@ Logger.prototype.slow = function(message) {
   this.write('slow', message);
 };
 
+const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
+
 Logger.prototype.write = function(type, message) {
   const date = new Date().toISOString();
   if (this.stdout[type]) {
     const line = (
       textColor[type](date) + '\t' +
-      typeColor[type](' ' + type.padEnd(7)) + '\t' +
+      typeColor[type](' ' + pad(type, 7)) + '\t' +
       textColor[type](message)
     );
     console.log(line);
