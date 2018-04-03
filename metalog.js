@@ -139,7 +139,6 @@ Logger.prototype.flush = function(callback) {
   const buffer = Buffer.concat(this.buffer);
   this.buffer.length = 0;
   this.stream.write(buffer, (err) => {
-    if (err) throw err;
     this.lock = false;
     if (callback) callback(err);
   });
