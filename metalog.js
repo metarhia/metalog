@@ -33,20 +33,26 @@ function Logger({
 util.inherits(Logger, events.EventEmitter);
 
 Logger.prototype.open = function() {
+  if (this.active) return;
+  this.active = true;
   const date = common.nowDate();
   this.file = this.path + '/' + date + '-' + this.nodeId + '.log';
   const now = new Date();
   const nextDate = new Date();
   nextDate.setUTCHours(0, 0, 0, 0);
   const nextReopen = nextDate - now + DAY_MILLISECONDS;
-  this.reopenTimer = setTimeout(this.open, nextReopen);
+  this.reopenTimer = setTimeout(() => {
+    this.once('close', () => {
+      this.open();
+    });
+    this.close();
+  }, nextReopen);
   if (this.keepDays) this.rotate();
   this.stream = fs.createWriteStream(this.file, this.options);
   this.flushTimer = setInterval(() => {
     this.flush();
   }, this.writeInterval);
   this.stream.on('open', () => {
-    this.active = true;
     this.emit('open');
   });
   this.stream.on('error', (err) => {
@@ -56,18 +62,22 @@ Logger.prototype.open = function() {
 };
 
 Logger.prototype.close = function() {
+  if (!this.active) return;
   const stream = this.stream;
   if (!stream || stream.destroyed || stream.closed) return;
   this.flush((err) => {
     if (err) return;
+    this.active = false;
     this.stream.end(() => {
-      this.active = false;
       clearInterval(this.flushTimer);
       clearTimeout(this.reopenTimer);
+      this.flushTimer = null;
+      this.reopenTimer = null;
+      const fileName = this.file;
       this.emit('close');
-      fs.stat(this.file, (err, stats) => {
+      fs.stat(fileName, (err, stats) => {
         if (err || stats.size > 0) return;
-        fs.unlink(this.file);
+        fs.unlink(this.file, () => {});
       });
     });
   });
