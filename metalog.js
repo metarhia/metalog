@@ -4,15 +4,53 @@ const fs = require('fs');
 const util = require('util');
 const events = require('events');
 const common = require('metarhia-common');
+const concolor = require('concolor');
 
 const DAY_MILLISECONDS = common.duration('1d');
+const LOG_TYPES = [
+  'system', 'fatal', 'error', 'warn', 'info', 'debug', 'slow'
+];
+
+const typeColor = concolor({
+  system: 'white/blue',
+  fatal: 'black/red',
+  error: 'yellow/red',
+  warn: 'black/yellow',
+  info: 'blue/white',
+  debug: 'black/green',
+  slow: 'yellow/blue'
+});
+
+const textColor = concolor({
+  system: 'b,blue',
+  fatal: 'b,red',
+  error: 'b,red',
+  warn: 'b,yellow',
+  info: 'b,green',
+  debug: 'b,green',
+  slow: 'b,blue'
+});
+
+const logTypes = (
+  // Convert array to boolean flags
+  types // Array of strings
+  // Returns: hash of boolean
+) => {
+  types = types || LOG_TYPES;
+  const flags = {};
+  let type;
+  for (type of types) flags[type] = true;
+  return flags;
+};
 
 function Logger({
   path, // log directory
   nodeId, // nodeId
   writeInterval, // Flush log to disk interval
   writeBuffer, // Buffer size 64kb
-  keepDays // Delete files after N days, 0 to disable
+  keepDays, // Delete files after N days, 0 to disable
+  toFile, // Array of string, write log types to file
+  stdout // Array of string, stdout log types
 }) {
   this.active = false;
   this.path = path;
@@ -27,6 +65,8 @@ function Logger({
   this.lock = false;
   this.buffer = [];
   this.file = '';
+  this.toFile = logTypes(toFile);
+  this.stdout = logTypes(stdout);
   this.open();
 }
 
@@ -105,29 +145,48 @@ Logger.prototype.rotate = function() {
 };
 
 Logger.prototype.system = function(message) {
-  this.write('[S]\t' + message);
+  this.write('system', message);
+};
+
+Logger.prototype.fatal = function(message) {
+  this.write('fatal', message);
 };
 
 Logger.prototype.error = function(message) {
-  this.write('[E]\t' + message);
+  this.write('error', message);
 };
 
 Logger.prototype.warn = function(message) {
-  this.write('[W]\t' + message);
+  this.write('warn', message);
 };
 
 Logger.prototype.info = function(message) {
-  this.write('[I]\t' + message);
+  this.write('info', message);
 };
 
 Logger.prototype.debug = function(message) {
-  this.write('[D]\t' + message);
+  this.write('debug', message);
 };
 
-Logger.prototype.write = function(message) {
-  const data = new Date().toISOString() + '\t' + message + '\n';
-  const buffer = Buffer.from(data);
-  this.buffer.push(buffer);
+Logger.prototype.slow = function(message) {
+  this.write('slow', message);
+};
+
+Logger.prototype.write = function(type, message) {
+  const date = new Date().toISOString();
+  if (this.stdout[type]) {
+    const line = (
+      textColor[type](date) + '\t' +
+      typeColor[type](' ' + type.padEnd(7)) + '\t' +
+      textColor[type](message)
+    );
+    console.log(line);
+  }
+  if (this.toFile[type]) {
+    const line = date + '\t[' + type + ']\t' + message + '\n';
+    const buffer = Buffer.from(line);
+    this.buffer.push(buffer);
+  }
 };
 
 Logger.prototype.flush = function(callback) {

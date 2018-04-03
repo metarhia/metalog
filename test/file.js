@@ -8,7 +8,8 @@ const logger = metalog({
   nodeId: 'S1N1',
   writeInterval: 3000,
   writeBuffer: 64 * 1024,
-  keepDays: 5
+  keepDays: 5,
+  stdout: []
 });
 
 tap.test('logger.open', (test) => {
@@ -22,31 +23,42 @@ tap.test('logger.open', (test) => {
 });
 
 tap.test('logger.system', (test) => {
-  logger.system('Test log message');
+  logger.system('System test log message');
+  test.end();
+});
+
+tap.test('logger.fatal', (test) => {
+  logger.fatal('Fatal test log message');
   test.end();
 });
 
 tap.test('logger.error', (test) => {
-  logger.error('Test log message');
+  logger.error('Error test log message');
   test.end();
 });
 
 tap.test('logger.warn', (test) => {
-  logger.warn('Test log message');
+  logger.warn('Warning test log message');
   test.end();
 });
 
 tap.test('logger.info', (test) => {
-  logger.info('Test log message');
+  logger.info('Info test log message');
   test.end();
 });
 
 tap.test('logger.debug', (test) => {
-  logger.debug('Test log message');
+  logger.debug('Debug test log message');
+  test.end();
+});
+
+tap.test('logger.slow', (test) => {
+  logger.slow('Slow test log message');
   test.end();
 });
 
 tap.test('logger write more then 60Mb', (test) => {
+  logger.stdout.INFO = false;
   logger.removeAllListeners('open');
   const begin = process.hrtime();
   for (let i = 0; i < 1000000; i++) {
@@ -58,6 +70,7 @@ tap.test('logger write more then 60Mb', (test) => {
     const time = end[0] * 1e9 + end[1];
     logger.open();
     logger.on('open', () => {
+      logger.stdout.INFO = true;
       logger.info(time);
       test.end();
     });
