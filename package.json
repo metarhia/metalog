@@ -19,7 +19,7 @@
   "main": "./metalog.js",
   "readmeFilename": "README.md",
   "scripts": {
-    "test": "eslint . && tap test/all.js",
+    "test": "eslint . && node test/display.js && tap test/file.js",
     "lint": "eslint .",
     "docs": "metaschema ./metalog.js"
   },
@@ -27,6 +27,7 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
+    "concolor": "^0.1.6",
     "metarhia-common": "^0.0.26"
   },
   "devDependencies": {
