@@ -97,9 +97,8 @@ Logger.prototype.open = function() {
   this.stream.on('open', () => {
     this.emit('open');
   });
-  this.stream.on('error', (err) => {
+  this.stream.on('error', () => {
     this.emit('error', new Error('Can\'t open log file:' + this.file));
-    throw err;
   });
 };
 
@@ -146,16 +145,21 @@ Logger.prototype.rotate = function() {
   });
 };
 
+const formatStack = (stack) => {
+  if (!stack.includes('; ')) return stack;
+  return stack.replace(/; /g, '\n\t');
+};
+
 Logger.prototype.system = function(message) {
   this.write('system', message);
 };
 
 Logger.prototype.fatal = function(message) {
-  this.write('fatal', message);
+  this.write('fatal', formatStack(message));
 };
 
 Logger.prototype.error = function(message) {
-  this.write('error', message);
+  this.write('error', formatStack(message));
 };
 
 Logger.prototype.warn = function(message) {
