@@ -8,26 +8,28 @@ const concolor = require('concolor');
 
 const DAY_MILLISECONDS = common.duration('1d');
 const LOG_TYPES = [
-  'system', 'fatal', 'error', 'warn', 'info', 'debug', 'slow'
+  'system', 'fatal', 'error', 'warn', 'info', 'debug', 'access', 'slow'
 ];
 
 const typeColor = concolor({
-  system: 'white/blue',
-  fatal: 'black/red',
-  error: 'yellow/red',
+  system: 'b,white/blue',
+  fatal: 'b,yellow/red',
+  error: 'black/red',
   warn: 'black/yellow',
   info: 'blue/white',
   debug: 'black/green',
-  slow: 'yellow/blue'
+  access: 'black/white',
+  slow: 'b,yellow/blue'
 });
 
 const textColor = concolor({
-  system: 'b,blue',
+  system: 'b,white',
   fatal: 'b,red',
-  error: 'b,red',
+  error: 'red',
   warn: 'b,yellow',
-  info: 'b,green',
+  info: 'white',
   debug: 'b,green',
+  access: 'white',
   slow: 'b,blue'
 });
 
@@ -166,6 +168,10 @@ Logger.prototype.info = function(message) {
 
 Logger.prototype.debug = function(message) {
   this.write('debug', message);
+};
+
+Logger.prototype.access = function(message) {
+  this.write('access', message);
 };
 
 Logger.prototype.slow = function(message) {
