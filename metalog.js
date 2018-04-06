@@ -7,6 +7,7 @@ const common = require('metarhia-common');
 const concolor = require('concolor');
 
 const DAY_MILLISECONDS = common.duration('1d');
+
 const LOG_TYPES = [
   'system', 'fatal', 'error', 'warn', 'info', 'debug', 'access', 'slow'
 ];
@@ -145,21 +146,23 @@ Logger.prototype.rotate = function() {
   });
 };
 
-const formatStack = (stack) => {
-  if (!stack.includes('; ')) return stack;
-  return stack.replace(/; /g, '\n\t');
-};
+Logger.normalizeStack = (stack) => stack.replace(/\s*at\s*/g, '\n\t');
+
+Logger.lineStack = (stack) => stack.replace(/\n\t/g, '; ');
+
+Logger.formatStack = (stack) => stack.replace(/; /g, '\n\t');
+
 
 Logger.prototype.system = function(message) {
   this.write('system', message);
 };
 
 Logger.prototype.fatal = function(message) {
-  this.write('fatal', formatStack(message));
+  this.write('fatal', Logger.normalizeStack(message), true);
 };
 
 Logger.prototype.error = function(message) {
-  this.write('error', formatStack(message));
+  this.write('error', Logger.normalizeStack(message), true);
 };
 
 Logger.prototype.warn = function(message) {
@@ -184,7 +187,7 @@ Logger.prototype.slow = function(message) {
 
 const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
-Logger.prototype.write = function(type, message) {
+Logger.prototype.write = function(type, message, multiline) {
   const date = new Date().toISOString();
   if (this.stdout[type]) {
     const line = (
@@ -195,8 +198,9 @@ Logger.prototype.write = function(type, message) {
     console.log(line);
   }
   if (this.toFile[type]) {
-    const line = date + '\t[' + type + ']\t' + message + '\n';
-    const buffer = Buffer.from(line);
+    const line = multiline ? Logger.lineStack(message) : message;
+    const data = date + '\t[' + type + ']\t' + line + '\n';
+    const buffer = Buffer.from(data);
     this.buffer.push(buffer);
   }
 };
