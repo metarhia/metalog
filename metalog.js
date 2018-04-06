@@ -146,7 +146,7 @@ Logger.prototype.rotate = function() {
   });
 };
 
-Logger.normalizeStack = (stack) => stack.replace(/\s*at\s*/g, '\n\t');
+Logger.normalizeStack = (stack) => stack.replace(/\s+at\s+/g, '\n\t');
 
 Logger.lineStack = (stack) => stack.replace(/\n\t/g, '; ');
 
@@ -174,7 +174,7 @@ Logger.prototype.info = function(message) {
 };
 
 Logger.prototype.debug = function(message) {
-  this.write('debug', message);
+  this.write('debug', Logger.normalizeStack(message), true);
 };
 
 Logger.prototype.access = function(message) {
