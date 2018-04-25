@@ -19,6 +19,6 @@ logger.debug('Debug test log message');
 logger.access('Access test log message');
 logger.slow('Slow test log message');
 const stack = new Error('Stack test log message').stack;
-logger.error(stack);
+logger.debug(stack);
 
 logger.close();
