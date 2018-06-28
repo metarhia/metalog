@@ -1,6 +1,6 @@
 'use strict';
 
-const tap = require('tap');
+const metatests = require('metatests');
 const metalog = require('..');
 
 const logger = metalog({
@@ -12,7 +12,7 @@ const logger = metalog({
   stdout: []
 });
 
-tap.test('logger.open', (test) => {
+metatests.test('logger.open', (test) => {
   logger.on('open', () => {
     test.end();
   });
@@ -22,42 +22,42 @@ tap.test('logger.open', (test) => {
   });
 });
 
-tap.test('logger.system', (test) => {
+metatests.test('logger.system', (test) => {
   logger.system('System test log message');
   test.end();
 });
 
-tap.test('logger.fatal', (test) => {
+metatests.test('logger.fatal', (test) => {
   logger.fatal('Fatal test log message');
   test.end();
 });
 
-tap.test('logger.error', (test) => {
+metatests.test('logger.error', (test) => {
   logger.error('Error test log message');
   test.end();
 });
 
-tap.test('logger.warn', (test) => {
+metatests.test('logger.warn', (test) => {
   logger.warn('Warning test log message');
   test.end();
 });
 
-tap.test('logger.info', (test) => {
+metatests.test('logger.info', (test) => {
   logger.info('Info test log message');
   test.end();
 });
 
-tap.test('logger.debug', (test) => {
+metatests.test('logger.debug', (test) => {
   logger.debug('Debug test log message');
   test.end();
 });
 
-tap.test('logger.slow', (test) => {
+metatests.test('logger.slow', (test) => {
   logger.slow('Slow test log message');
   test.end();
 });
 
-tap.test('logger write more then 60Mb', (test) => {
+metatests.test('logger write more then 60Mb', (test) => {
   logger.stdout.INFO = false;
   logger.removeAllListeners('open');
   const begin = process.hrtime();
@@ -77,24 +77,30 @@ tap.test('logger write more then 60Mb', (test) => {
   });
 });
 
-tap.test('logger.close', (test) => {
+metatests.test('logger.close', (test) => {
   logger.removeAllListeners('close');
+  console.log('close1');
   logger.close();
   logger.on('close', () => {
+    console.log('close2');
     test.end();
   });
 });
 
-tap.test('logger.close after close', (test) => {
-  logger.removeAllListeners('close');
+metatests.test('logger.close after close', (test) => {
+  //logger.removeAllListeners('close');
+  console.log('close3');
   logger.on('close', () => {
+    console.log('close4');
     test.notOk();
   });
+  console.log('close5');
   logger.close();
+  console.log('close6');
   test.end();
 });
 
-tap.test('logger.rotate', (test) => {
+metatests.test('logger.rotate', (test) => {
   logger.rotate();
   test.end();
 });
