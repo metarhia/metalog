@@ -19,7 +19,7 @@
   "main": "./metalog.js",
   "readmeFilename": "README.md",
   "scripts": {
-    "test": "eslint . && node test/display.js && tap test/file.js",
+    "test": "eslint . && node test/display.js node node test/file.js",
     "lint": "eslint .",
     "docs": "metaschema ./metalog.js"
   },
@@ -33,6 +33,6 @@
   "devDependencies": {
     "eslint": "^4.19.1",
     "metaschema": "^0.0.7",
-    "tap": "^11.1.4"
+    "metatests": "^0.1.11"
   }
 }
