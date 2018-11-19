@@ -14,55 +14,55 @@ const createLogger = () => metalog({
 
 const logger1 = createLogger();
 
-metatests.test('logger.open', (test) => {
+metatests.test('logger.open', test => {
   logger1.on('open', () => {
     test.end();
   });
-  logger1.on('error', (err) => {
+  logger1.on('error', err => {
     test.error(err);
     process.exit(1);
   });
   logger1.open();
 });
 
-metatests.test('logger.system', (test) => {
+metatests.test('logger.system', test => {
   logger1.system('System test log message');
   test.end();
 });
 
-metatests.test('logger.fatal', (test) => {
+metatests.test('logger.fatal', test => {
   logger1.fatal('Fatal test log message');
   test.end();
 });
 
-metatests.test('logger.error', (test) => {
+metatests.test('logger.error', test => {
   logger1.error('Error test log message');
   test.end();
 });
 
-metatests.test('logger.warn', (test) => {
+metatests.test('logger.warn', test => {
   logger1.warn('Warning test log message');
   test.end();
 });
 
-metatests.test('logger.info', (test) => {
+metatests.test('logger.info', test => {
   logger1.info('Info test log message');
   test.end();
 });
 
-metatests.test('logger.debug', (test) => {
+metatests.test('logger.debug', test => {
   logger1.debug('Debug test log message');
   test.end();
 });
 
-metatests.test('logger.slow', (test) => {
+metatests.test('logger.slow', test => {
   logger1.slow('Slow test log message');
   test.end();
 });
 
 const logger2 = createLogger();
 
-metatests.test('logger write more then 60Mb', (test) => {
+metatests.test('logger write more then 60Mb', test => {
   logger2.open();
   logger2.stdout.INFO = false;
   const begin = process.hrtime();
@@ -84,7 +84,7 @@ metatests.test('logger write more then 60Mb', (test) => {
 
 const logger3 = createLogger();
 
-metatests.test('logger.close', (test) => {
+metatests.test('logger.close', test => {
   logger3.open();
   logger3.info('Info log message');
   logger3.close();
@@ -95,7 +95,7 @@ metatests.test('logger.close', (test) => {
 
 const logger4 = createLogger();
 
-metatests.test('logger.close after close', (test) => {
+metatests.test('logger.close after close', test => {
   logger4.open();
   logger4.info('Info log message');
   logger4.close();
@@ -109,7 +109,7 @@ metatests.test('logger.close after close', (test) => {
 
 const logger5 = createLogger();
 
-metatests.test('logger.rotate', (test) => {
+metatests.test('logger.rotate', test => {
   logger5.rotate();
   test.end();
 });
