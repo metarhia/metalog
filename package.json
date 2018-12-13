@@ -27,12 +27,12 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
-    "concolor": "^0.1.7",
-    "metarhia-common": "^0.0.27"
+    "@metarhia/common": "^1.2.1",
+    "concolor": "^0.1.9"
   },
   "devDependencies": {
-    "eslint": "^4.19.1",
-    "metaschema": "^0.0.7",
-    "metatests": "^0.2.4"
+    "eslint": "^5.10.0",
+    "metaschema": "0.0.29",
+    "metatests": "^0.3.0"
   }
 }
