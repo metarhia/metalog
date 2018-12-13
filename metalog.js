@@ -3,7 +3,7 @@
 const fs = require('fs');
 const util = require('util');
 const events = require('events');
-const common = require('metarhia-common');
+const common = require('@metarhia/common');
 const concolor = require('concolor');
 
 const DAY_MILLISECONDS = common.duration('1d');
@@ -34,11 +34,10 @@ const textColor = concolor({
   slow: 'b,blue'
 });
 
-const logTypes = (
-  // Convert array to boolean flags
-  types // Array of strings
-  // Returns: hash of boolean
-) => {
+// Convert array to boolean flags
+//   types <string[]>
+// Returns: <Object>
+const logTypes = types => {
   types = types || LOG_TYPES;
   const flags = {};
   let type;
@@ -46,14 +45,22 @@ const logTypes = (
   return flags;
 };
 
+// Logger constructor
+//   path <string> log directory
+//   nodeId <string>
+//   writeInterval <number> flush log to disk interval
+//   writeBuffer <number> buffer size 64kb
+//   keepDays <number> delete files after N days, 0 to disable
+//   toFile <string[]> write log types to file
+//   stdout <string[]> stdout log types
 function Logger({
-  path, // log directory
-  nodeId, // nodeId
-  writeInterval, // Flush log to disk interval
-  writeBuffer, // Buffer size 64kb
-  keepDays, // Delete files after N days, 0 to disable
-  toFile, // Array of string, write log types to file
-  stdout // Array of string, stdout log types
+  path,
+  nodeId,
+  writeInterval,
+  writeBuffer,
+  keepDays,
+  toFile,
+  stdout
 }) {
   this.active = false;
   this.path = path;
