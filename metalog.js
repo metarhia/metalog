@@ -155,7 +155,7 @@ Logger.prototype.rotate = function() {
 
 Logger.normalizeStack = (stack) => stack.replace(/\s+at\s+/g, '\n\t');
 
-Logger.lineStack = (stack) => stack.replace(/[\n\r]\s+/g, '; ');
+Logger.lineStack = (stack) => stack.replace(/[\n\r]\s*/g, '; ');
 
 Logger.formatStack = (stack) => stack.replace(/; /g, '\n\t');
 
