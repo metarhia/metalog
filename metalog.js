@@ -165,11 +165,11 @@ Logger.prototype.system = function(message) {
 };
 
 Logger.prototype.fatal = function(message) {
-  this.write('fatal', Logger.normalizeStack(message), true);
+  this.write('fatal', Logger.normalizeStack(message));
 };
 
 Logger.prototype.error = function(message) {
-  this.write('error', Logger.normalizeStack(message), true);
+  this.write('error', Logger.normalizeStack(message));
 };
 
 Logger.prototype.warn = function(message) {
@@ -181,7 +181,7 @@ Logger.prototype.info = function(message) {
 };
 
 Logger.prototype.debug = function(message) {
-  this.write('debug', Logger.normalizeStack(message), true);
+  this.write('debug', Logger.normalizeStack(message));
 };
 
 Logger.prototype.access = function(message) {
@@ -194,7 +194,7 @@ Logger.prototype.slow = function(message) {
 
 const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
-Logger.prototype.write = function(type, message, multiline) {
+Logger.prototype.write = function(type, message) {
   const date = new Date().toISOString();
   if (this.stdout[type]) {
     const line = (
@@ -205,6 +205,7 @@ Logger.prototype.write = function(type, message, multiline) {
     console.log(line);
   }
   if (this.toFile[type]) {
+    const multiline = (/[\n\r]/g).test(message);
     const line = multiline ? Logger.lineStack(message) : message;
     const data = date + '\t[' + type + ']\t' + line + '\n';
     const buffer = Buffer.from(data);
