@@ -1,6 +1,6 @@
 {
   "name": "metalog",
-  "version": "0.0.14",
+  "version": "0.1.0",
   "author": "Timur Shemsedinov <timur.shemsedinov@gmail.com>",
   "description": "Meta Logger for Metarhia",
   "license": "MIT",
@@ -33,6 +33,6 @@
   "devDependencies": {
     "eslint": "^5.10.0",
     "metaschema": "0.0.29",
-    "metatests": "^0.3.0"
+    "metatests": "^0.4.0"
   }
 }
