@@ -5,11 +5,12 @@ const metalog = require('..');
 
 const createLogger = () => metalog({
   path: './log',
-  nodeId: 'S1N1',
+  node: 'S1N1',
+  application: 'app1',
   writeInterval: 3000,
   writeBuffer: 64 * 1024,
   keepDays: 5,
-  stdout: []
+  toStdout: []
 });
 
 const logger1 = createLogger();
@@ -64,7 +65,7 @@ const logger2 = createLogger();
 
 metatests.test('logger write more then 60Mb', test => {
   logger2.open();
-  logger2.stdout.INFO = false;
+  logger2.toStdout.INFO = false;
   const begin = process.hrtime();
   for (let i = 0; i < 1000000; i++) {
     logger2.info('Write more then 60Mb logs, line: ' + i);
@@ -75,7 +76,7 @@ metatests.test('logger write more then 60Mb', test => {
     const time = end[0] * 1e9 + end[1];
     logger2.open();
     logger2.on('open', () => {
-      logger2.stdout.INFO = true;
+      logger2.toStdout.INFO = true;
       logger2.info(time);
       test.end();
     });
