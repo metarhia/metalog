@@ -83,7 +83,7 @@ Logger.prototype.open = function() {
   if (this.active) return;
   this.active = true;
   const date = common.nowDate();
-  this.file = this.path + '/' + date + '-' + this.node + '.log';
+  this.file = `${this.path}/${date}-${this.node}.log`;
   const now = new Date();
   const nextDate = new Date();
   nextDate.setUTCHours(0, 0, 0, 0);
@@ -103,7 +103,7 @@ Logger.prototype.open = function() {
     this.emit('open');
   });
   this.stream.on('error', () => {
-    this.emit('error', new Error('Can\'t open log file:' + this.file));
+    this.emit('error', new Error(`Can't open log file: ${this.file}`));
   });
 };
 
@@ -144,7 +144,7 @@ Logger.prototype.rotate = function() {
       fileTime = new Date(fileName.substring(0, 10)).getTime();
       fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
       if (fileAge > 1 && fileAge > this.keepDays - 1) {
-        fs.unlink(this.path + '/' + fileName, common.emptiness);
+        fs.unlink(`${this.path}/${fileName}`, common.emptiness);
       }
     }
   });
