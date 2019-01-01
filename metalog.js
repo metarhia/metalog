@@ -121,8 +121,9 @@ Logger.prototype.close = function() {
       const fileName = this.file;
       this.emit('close');
       fs.stat(fileName, (err, stats) => {
-        if (err || stats.size > 0) return;
-        fs.unlink(this.file, () => {});
+        if (err) { console.log(err); return; }
+        if (stats.size > 0) return;
+        fs.unlink(this.file, (err) => { console.log(err); });
       });
     });
   });
@@ -131,7 +132,7 @@ Logger.prototype.close = function() {
 Logger.prototype.rotate = function() {
   if (!this.keepDays) return;
   fs.readdir(this.path, (err, files) => {
-    if (err) return;
+    if (err) { console.log(err); return; }
     const now = new Date();
     const date = new Date(
       now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0
@@ -143,7 +144,7 @@ Logger.prototype.rotate = function() {
       fileTime = new Date(fileName.substring(0, 10)).getTime();
       fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
       if (fileAge > 1 && fileAge > this.keepDays - 1) {
-        fs.unlink(this.path + '/' + fileName, common.emptiness);
+        fs.unlink(this.path + '/' + fileName, (err) => { console.log(err); });
       }
     }
   });
