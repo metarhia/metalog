@@ -111,7 +111,7 @@ Logger.prototype.close = function() {
   if (!this.active) return;
   const stream = this.stream;
   if (!stream || stream.destroyed || stream.closed) return;
-  this.flush((err) => {
+  this.flush(err => {
     if (err) return;
     this.active = false;
     this.stream.end(() => {
@@ -150,11 +150,11 @@ Logger.prototype.rotate = function() {
   });
 };
 
-Logger.normalizeStack = (stack) => stack.replace(/\s+at\s+/g, '\n\t');
+Logger.normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
 
-Logger.lineStack = (stack) => stack.replace(/[\n\r]\s*/g, '; ');
+Logger.lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
-Logger.formatStack = (stack) => stack.replace(/; /g, '\n\t');
+Logger.formatStack = stack => stack.replace(/; /g, '\n\t');
 
 
 Logger.prototype.system = function(message) {
@@ -221,10 +221,10 @@ Logger.prototype.flush = function(callback) {
   this.lock = true;
   const buffer = Buffer.concat(this.buffer);
   this.buffer.length = 0;
-  this.stream.write(buffer, (err) => {
+  this.stream.write(buffer, err => {
     this.lock = false;
     if (callback) callback(err);
   });
 };
 
-module.exports = (args) => new Logger(args);
+module.exports = args => new Logger(args);
