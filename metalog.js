@@ -133,7 +133,7 @@ class Logger extends events.EventEmitter {
     if (this.active) return;
     this.active = true;
     const date = common.nowDate();
-    this.file = this.path + '/' + date + '-' + this.node + '.log';
+    this.file = `${this.path}/${date}-${this.node}.log`;
     const now = new Date();
     const nextDate = new Date();
     nextDate.setUTCHours(0, 0, 0, 0);
@@ -153,7 +153,7 @@ class Logger extends events.EventEmitter {
       this.emit('open');
     });
     this.stream.on('error', () => {
-      this.emit('error', new Error('Can\'t open log file:' + this.file));
+      this.emit('error', new Error(`Can't open log file: ${this.file}`));
     });
   }
 
@@ -234,7 +234,7 @@ class Logger extends events.EventEmitter {
 
   flush(callback) {
     if (!this.active || this.lock || !this.buffer.length) {
-      if (callback) callback(new Error('Can\'t flush log buffer'));
+      if (callback) callback(new Error(`Can't flush log buffer`));
       return;
     }
     this.lock = true;
