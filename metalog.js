@@ -47,24 +47,21 @@ const logTypes = types => {
 
 // Logger constructor
 //   path <string> log directory
-//   nodeId <string>
+//   node <string> nodeId
+//   app <string> application name
 //   writeInterval <number> flush log to disk interval
 //   writeBuffer <number> buffer size 64kb
 //   keepDays <number> delete files after N days, 0 to disable
 //   toFile <string[]> write log types to file
-//   stdout <string[]> stdout log types
-function Logger({
-  path,
-  nodeId,
-  writeInterval,
-  writeBuffer,
-  keepDays,
-  toFile,
-  stdout
-}) {
+//   toStdout <string[]> write log types to stdout
+function Logger(options) {
+  const { path, node, application } = options;
+  const { writeInterval, writeBuffer, keepDays } = options;
+  const { toFile, toStdout } = options;
   this.active = false;
   this.path = path;
-  this.nodeId = nodeId;
+  this.node = node;
+  this.application = application;
   this.writeInterval = writeInterval || 3000;
   this.writeBuffer = writeBuffer || 64 * 1024;
   this.keepDays = keepDays || 0;
@@ -76,7 +73,7 @@ function Logger({
   this.buffer = [];
   this.file = '';
   this.toFile = logTypes(toFile);
-  this.stdout = logTypes(stdout);
+  this.toStdout = logTypes(toStdout);
   this.open();
 }
 
@@ -86,7 +83,7 @@ Logger.prototype.open = function() {
   if (this.active) return;
   this.active = true;
   const date = common.nowDate();
-  this.file = this.path + '/' + date + '-' + this.nodeId + '.log';
+  this.file = this.path + '/' + date + '-' + this.node + '.log';
   const now = new Date();
   const nextDate = new Date();
   nextDate.setUTCHours(0, 0, 0, 0);
@@ -195,19 +192,22 @@ Logger.prototype.slow = function(message) {
 const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
 Logger.prototype.write = function(type, message) {
-  const date = new Date().toISOString();
-  if (this.stdout[type]) {
-    const line = (
-      textColor[type](date) + '\t' +
-      typeColor[type](' ' + pad(type, 7)) + '\t' +
-      textColor[type](message)
-    );
+  const { node, application } = this;
+  const date = new Date();
+  if (this.toStdout[type]) {
+    const normalColor = textColor[type];
+    const markColor = typeColor[type];
+    const time = normalColor(date.toTimeString().substring(0, 8));
+    const mark = markColor(' ' + pad(type, 7));
+    const msg = normalColor(`${node}/${application}  ${message}`);
+    const line = `${time}  ${mark}  ${msg}`;
     console.log(line);
   }
   if (this.toFile[type]) {
+    const time = date.toISOString();
     const multiline = (/[\n\r]/g).test(message);
     const line = multiline ? Logger.lineStack(message) : message;
-    const data = date + '\t[' + type + ']\t' + line + '\n';
+    const data = `${time} [${type}] ${node}/${application} ${line}\n`;
     const buffer = Buffer.from(data);
     this.buffer.push(buffer);
   }
