@@ -6,7 +6,6 @@ const metalog = require('..');
 const createLogger = () => metalog({
   path: './log',
   node: 'S1N1',
-  application: 'app1',
   writeInterval: 3000,
   writeBuffer: 64 * 1024,
   keepDays: 5,
@@ -28,36 +27,43 @@ metatests.test('logger.open', test => {
 
 metatests.test('logger.system', test => {
   logger1.system('System test log message');
+  logger1.system('System test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.fatal', test => {
   logger1.fatal('Fatal test log message');
+  logger1.fatal('Fatal test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.error', test => {
   logger1.error('Error test log message');
+  logger1.error('Error test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.warn', test => {
   logger1.warn('Warning test log message');
+  logger1.warn('Warning test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.info', test => {
   logger1.info('Info test log message');
+  logger1.info('Info test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.debug', test => {
   logger1.debug('Debug test log message');
+  logger1.debug('Debug test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.slow', test => {
   logger1.slow('Slow test log message');
+  logger1.slow('Slow test log message', 'app');
   test.end();
 });
 

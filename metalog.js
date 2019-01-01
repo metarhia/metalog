@@ -55,13 +55,12 @@ const logTypes = types => {
 //   toFile <string[]> write log types to file
 //   toStdout <string[]> write log types to stdout
 function Logger(options) {
-  const { path, node, application } = options;
+  const { path, node } = options;
   const { writeInterval, writeBuffer, keepDays } = options;
   const { toFile, toStdout } = options;
   this.active = false;
   this.path = path;
   this.node = node;
-  this.application = application;
   this.writeInterval = writeInterval || 3000;
   this.writeBuffer = writeBuffer || 64 * 1024;
   this.keepDays = keepDays || 0;
@@ -157,49 +156,48 @@ Logger.lineStack = (stack) => stack.replace(/[\n\r]\s*/g, '; ');
 Logger.formatStack = (stack) => stack.replace(/; /g, '\n\t');
 
 
-Logger.prototype.system = function(message) {
-  this.write('system', message);
+Logger.prototype.system = function(message, application) {
+  this.write('system', message, application);
 };
 
-Logger.prototype.fatal = function(message) {
-  this.write('fatal', Logger.normalizeStack(message));
+Logger.prototype.fatal = function(message, application) {
+  this.write('fatal', Logger.normalizeStack(message), application);
 };
 
-Logger.prototype.error = function(message) {
-  this.write('error', Logger.normalizeStack(message));
+Logger.prototype.error = function(message, application) {
+  this.write('error', Logger.normalizeStack(message), application);
 };
 
-Logger.prototype.warn = function(message) {
-  this.write('warn', message);
+Logger.prototype.warn = function(message, application) {
+  this.write('warn', message, application);
 };
 
-Logger.prototype.info = function(message) {
-  this.write('info', message);
+Logger.prototype.info = function(message, application) {
+  this.write('info', message, application);
 };
 
-Logger.prototype.debug = function(message) {
-  this.write('debug', Logger.normalizeStack(message));
+Logger.prototype.debug = function(message, application) {
+  this.write('debug', Logger.normalizeStack(message), application);
 };
 
-Logger.prototype.access = function(message) {
-  this.write('access', message);
+Logger.prototype.access = function(message, application) {
+  this.write('access', message, application);
 };
 
-Logger.prototype.slow = function(message) {
-  this.write('slow', message);
+Logger.prototype.slow = function(message, application) {
+  this.write('slow', message, application);
 };
 
 const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
-Logger.prototype.write = function(type, message) {
-  const { node, application } = this;
+Logger.prototype.write = function(type, message, application = 'application') {
   const date = new Date();
   if (this.toStdout[type]) {
     const normalColor = textColor[type];
     const markColor = typeColor[type];
     const time = normalColor(date.toTimeString().substring(0, 8));
     const mark = markColor(' ' + pad(type, 7));
-    const msg = normalColor(`${node}/${application}  ${message}`);
+    const msg = normalColor(`${this.node}/${application}  ${message}`);
     const line = `${time}  ${mark}  ${msg}`;
     console.log(line);
   }
@@ -207,7 +205,7 @@ Logger.prototype.write = function(type, message) {
     const time = date.toISOString();
     const multiline = (/[\n\r]/g).test(message);
     const line = multiline ? Logger.lineStack(message) : message;
-    const data = `${time} [${type}] ${node}/${application} ${line}\n`;
+    const data = `${time} [${type}] ${this.node}/${application} ${line}\n`;
     const buffer = Buffer.from(data);
     this.buffer.push(buffer);
   }
