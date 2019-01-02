@@ -45,10 +45,57 @@ const logTypes = types => {
   return flags;
 };
 
+// Logger wrapper to bind it to certain application
+
+class ApplicationLogger {
+
+  // logger <Logger>
+  // application <string> name
+  constructor(logger, application = 'default') {
+    this.logger = logger;
+    this.application = application;
+  }
+
+  system(message) {
+    this.logger.write('system', message, this.application);
+  }
+
+  fatal(message) {
+    const msg = Logger.normalizeStack(message);
+    this.logger.write('fatal', msg, this.application);
+  }
+
+  error(message) {
+    const msg = Logger.normalizeStack(message);
+    this.logger.write('error', msg, this.application);
+  }
+
+  warn(message) {
+    this.logger.write('warn', message, this.application);
+  }
+
+  info(message) {
+    this.logger.write('info', message, this.application);
+  }
+
+  debug(message) {
+    const msg = Logger.normalizeStack(message);
+    this.logger.write('debug', msg, this.application);
+  }
+
+  access(message) {
+    this.logger.write('access', message, this.application);
+  }
+
+  slow(message) {
+    this.logger.write('slow', message, this.application);
+  }
+
+}
+
 // Logger constructor
 //   path <string> log directory
 //   node <string> nodeId
-//   app <string> application name
 //   writeInterval <number> flush log to disk interval
 //   writeBuffer <number> buffer size 64kb
 //   keepDays <number> delete files after N days, 0 to disable
@@ -166,42 +213,9 @@ Logger.lineStack = (stack) => stack.replace(/[\n\r]\s*/g, '; ');
 
 Logger.formatStack = (stack) => stack.replace(/; /g, '\n\t');
 
-
-Logger.prototype.system = function(message, application) {
-  this.write('system', message, application);
-};
-
-Logger.prototype.fatal = function(message, application) {
-  this.write('fatal', Logger.normalizeStack(message), application);
-};
-
-Logger.prototype.error = function(message, application) {
-  this.write('error', Logger.normalizeStack(message), application);
-};
-
-Logger.prototype.warn = function(message, application) {
-  this.write('warn', message, application);
-};
-
-Logger.prototype.info = function(message, application) {
-  this.write('info', message, application);
-};
-
-Logger.prototype.debug = function(message, application) {
-  this.write('debug', Logger.normalizeStack(message), application);
-};
-
-Logger.prototype.access = function(message, application) {
-  this.write('access', message, application);
-};
-
-Logger.prototype.slow = function(message, application) {
-  this.write('slow', message, application);
-};
-
 const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
-Logger.prototype.write = function(type, message, application = 'application') {
+Logger.prototype.write = function(type, message, application = 'default') {
   const date = new Date();
   if (this.toStdout[type]) {
     const normalColor = textColor[type];
@@ -234,6 +248,10 @@ Logger.prototype.flush = function(callback) {
     this.lock = false;
     if (callback) callback(err);
   });
+};
+
+Logger.prototype.bind = function(application) {
+  return new ApplicationLogger(this, application);
 };
 
 module.exports = (args) => new Logger(args);

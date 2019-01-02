@@ -10,79 +10,72 @@ const createLogger = () => metalog({
   writeBuffer: 64 * 1024,
   keepDays: 5,
   toStdout: []
-});
+}).bind('app1');
 
 const logger1 = createLogger();
 
 metatests.test('logger.open', test => {
-  logger1.on('open', () => {
+  logger1.logger.on('open', () => {
     test.end();
   });
-  logger1.on('error', err => {
+  logger1.logger.on('error', err => {
     test.error(err);
     process.exit(1);
   });
-  logger1.open();
+  logger1.logger.open();
 });
 
 metatests.test('logger.system', test => {
   logger1.system('System test log message');
-  logger1.system('System test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.fatal', test => {
   logger1.fatal('Fatal test log message');
-  logger1.fatal('Fatal test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.error', test => {
   logger1.error('Error test log message');
-  logger1.error('Error test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.warn', test => {
   logger1.warn('Warning test log message');
-  logger1.warn('Warning test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.info', test => {
   logger1.info('Info test log message');
-  logger1.info('Info test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.debug', test => {
   logger1.debug('Debug test log message');
-  logger1.debug('Debug test log message', 'app');
   test.end();
 });
 
 metatests.test('logger.slow', test => {
   logger1.slow('Slow test log message');
-  logger1.slow('Slow test log message', 'app');
   test.end();
 });
 
 const logger2 = createLogger();
 
 metatests.test('logger write more then 60Mb', test => {
-  logger2.open();
-  logger2.toStdout.INFO = false;
+  logger2.logger.open();
+  logger2.logger.toStdout.INFO = false;
   const begin = process.hrtime();
   for (let i = 0; i < 1000000; i++) {
     logger2.info('Write more then 60Mb logs, line: ' + i);
   }
-  logger2.close();
-  logger2.on('close', () => {
+  logger2.logger.close();
+  logger2.logger.on('close', () => {
     const end = process.hrtime(begin);
     const time = end[0] * 1e9 + end[1];
-    logger2.open();
-    logger2.on('open', () => {
-      logger2.toStdout.INFO = true;
+    logger2.logger.open();
+    logger2.logger.on('open', () => {
+      logger2.logger.toStdout.INFO = true;
       logger2.info(time);
       test.end();
     });
@@ -92,10 +85,10 @@ metatests.test('logger write more then 60Mb', test => {
 const logger3 = createLogger();
 
 metatests.test('logger.close', test => {
-  logger3.open();
+  logger3.logger.open();
   logger3.info('Info log message');
-  logger3.close();
-  logger3.on('close', () => {
+  logger3.logger.close();
+  logger3.logger.on('close', () => {
     test.end();
   });
 });
@@ -103,13 +96,13 @@ metatests.test('logger.close', test => {
 const logger4 = createLogger();
 
 metatests.test('logger.close after close', test => {
-  logger4.open();
+  logger4.logger.open();
   logger4.info('Info log message');
-  logger4.close();
-  logger4.on('close', () => {
-    logger4.removeAllListeners('close');
-    logger4.close();
-    logger4.on('close', test.mustNotCall());
+  logger4.logger.close();
+  logger4.logger.on('close', () => {
+    logger4.logger.removeAllListeners('close');
+    logger4.logger.close();
+    logger4.logger.on('close', test.mustNotCall());
     test.end();
   });
 });
@@ -117,6 +110,6 @@ metatests.test('logger.close after close', test => {
 const logger5 = createLogger();
 
 metatests.test('logger.rotate', test => {
-  logger5.rotate();
+  logger5.logger.rotate();
   test.end();
 });
