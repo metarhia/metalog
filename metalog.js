@@ -61,12 +61,12 @@ class ApplicationLogger {
   }
 
   fatal(message) {
-    const msg = Logger.normalizeStack(message);
+    const msg = normalizeStack(message);
     this.logger.write('fatal', msg, this.application);
   }
 
   error(message) {
-    const msg = Logger.normalizeStack(message);
+    const msg = normalizeStack(message);
     this.logger.write('error', msg, this.application);
   }
 
@@ -79,7 +79,7 @@ class ApplicationLogger {
   }
 
   debug(message) {
-    const msg = Logger.normalizeStack(message);
+    const msg = normalizeStack(message);
     this.logger.write('debug', msg, this.application);
   }
 
@@ -207,11 +207,11 @@ Logger.prototype.rotate = function() {
   });
 };
 
-Logger.normalizeStack = (stack) => stack.replace(/\s+at\s+/g, '\n\t');
+const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
 
-Logger.lineStack = (stack) => stack.replace(/[\n\r]\s*/g, '; ');
+const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
-Logger.formatStack = (stack) => stack.replace(/; /g, '\n\t');
+const formatStack = stack => stack.replace(/; /g, '\n\t');
 
 const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
@@ -229,7 +229,7 @@ Logger.prototype.write = function(type, message, application = 'default') {
   if (this.toFile[type]) {
     const time = date.toISOString();
     const multiline = (/[\n\r]/g).test(message);
-    const line = multiline ? Logger.lineStack(message) : message;
+    const line = multiline ? lineStack(message) : message;
     const data = `${time} [${type}] ${this.node}/${application} ${line}\n`;
     const buffer = Buffer.from(data);
     this.buffer.push(buffer);
