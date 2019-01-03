@@ -45,6 +45,14 @@ const logTypes = types => {
   return flags;
 };
 
+const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
+
+const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
+
+const formatStack = stack => stack.replace(/; /g, '\n\t');
+
+const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
+
 // Logger wrapper to bind it to certain application
 
 class ApplicationLogger {
@@ -206,14 +214,6 @@ Logger.prototype.rotate = function() {
     }
   });
 };
-
-const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
-
-const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
-
-const formatStack = stack => stack.replace(/; /g, '\n\t');
-
-const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
 Logger.prototype.write = function(type, message, application = 'default') {
   const date = new Date();
