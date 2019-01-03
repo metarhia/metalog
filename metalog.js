@@ -49,7 +49,7 @@ const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
 
 const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
-const formatStack = stack => stack.replace(/; /g, '\n\t');
+//const formatStack = stack => stack.replace(/; /g, '\n\t');
 
 const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
