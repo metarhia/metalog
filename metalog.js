@@ -169,12 +169,12 @@ Logger.prototype.close = function() {
       this.emit('close');
       fs.stat(fileName, (err, stats) => {
         if (err) {
-          console.log(err);
+          process.stdout.write(`${err} \n`);
           return;
         }
         if (stats.size > 0) return;
         fs.unlink(this.file, (err) => {
-          console.log(err);
+          process.stdout.write(`${err} \n`);
         });
       });
     });
@@ -185,7 +185,7 @@ Logger.prototype.rotate = function() {
   if (!this.keepDays) return;
   fs.readdir(this.path, (err, files) => {
     if (err) {
-      console.log(err);
+      process.stdout.write(`${err} \n`);
       return;
     }
     const now = new Date();
@@ -200,7 +200,7 @@ Logger.prototype.rotate = function() {
       fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
       if (fileAge > 1 && fileAge > this.keepDays - 1) {
         fs.unlink(this.path + '/' + fileName, (err) => {
-          console.log(err);
+          process.stdout.write(`${err} \n`);
         });
       }
     }
@@ -224,7 +224,7 @@ Logger.prototype.write = function(type, message, application = 'default') {
     const mark = markColor(' ' + pad(type, 7));
     const msg = normalColor(`${this.node}/${application}  ${message}`);
     const line = `${time}  ${mark}  ${msg}`;
-    console.log(line);
+    process.stdout.write(`${line} \n`);
   }
   if (this.toFile[type]) {
     const time = date.toISOString();
