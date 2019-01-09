@@ -1,7 +1,6 @@
 'use strict';
 
 const fs = require('fs');
-const util = require('util');
 const events = require('events');
 const common = require('@metarhia/common');
 const concolor = require('concolor');
@@ -111,6 +110,7 @@ class Logger extends events.EventEmitter {
     //   keepDays <number> delete files after N days, 0 to disable
     //   toFile <string[]> write log types to file
     //   toStdout <string[]> write log types to stdout
+    super();
     const { path, node } = options;
     const { writeInterval, writeBuffer, keepDays } = options;
     const { toFile, toStdout } = options;
