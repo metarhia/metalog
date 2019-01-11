@@ -44,9 +44,9 @@ const logTypes = types => {
   return flags;
 };
 
-const normalizeStack = (stack) => stack.replace(/\s+at\s+/g, '\n\t');
+const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
 
-const lineStack = (stack) => stack.replace(/[\n\r]\s*/g, '; ');
+const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
 const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
@@ -161,7 +161,7 @@ class Logger extends events.EventEmitter {
     if (!this.active) return;
     const stream = this.stream;
     if (!stream || stream.destroyed || stream.closed) return;
-    this.flush((err) => {
+    this.flush(err => {
       if (err) return;
       this.active = false;
       this.stream.end(() => {
@@ -177,7 +177,7 @@ class Logger extends events.EventEmitter {
             return;
           }
           if (stats.size > 0) return;
-          fs.unlink(this.file, (err) => {
+          fs.unlink(this.file, err => {
             process.stdout.write(`${err}\n`);
           });
         });
@@ -203,7 +203,7 @@ class Logger extends events.EventEmitter {
         fileTime = new Date(fileName.substring(0, 10)).getTime();
         fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
         if (fileAge > 1 && fileAge > this.keepDays - 1) {
-          fs.unlink(this.path + '/' + fileName, (err) => {
+          fs.unlink(this.path + '/' + fileName, err => {
             process.stdout.write(`${err}\n`);
           });
         }
@@ -234,13 +234,13 @@ class Logger extends events.EventEmitter {
 
   flush(callback) {
     if (!this.active || this.lock || !this.buffer.length) {
-      if (callback) callback(new Error(`Can't flush log buffer`));
+      if (callback) callback(new Error('Can\'t flush log buffer'));
       return;
     }
     this.lock = true;
     const buffer = Buffer.concat(this.buffer);
     this.buffer.length = 0;
-    this.stream.write(buffer, (err) => {
+    this.stream.write(buffer, err => {
       this.lock = false;
       if (callback) callback(err);
     });
@@ -252,4 +252,4 @@ class Logger extends events.EventEmitter {
 
 }
 
-module.exports = (args) => new Logger(args);
+module.exports = args => new Logger(args);
