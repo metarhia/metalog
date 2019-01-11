@@ -1,6 +1,6 @@
 {
   "name": "metalog",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Timur Shemsedinov <timur.shemsedinov@gmail.com>",
   "description": "Meta Logger for Metarhia",
   "license": "MIT",
@@ -20,8 +20,7 @@
   "readmeFilename": "README.md",
   "scripts": {
     "test": "eslint . && metatests test/",
-    "lint": "eslint .",
-    "docs": "metaschema ./metalog.js"
+    "lint": "eslint ."
   },
   "engines": {
     "node": ">=6.0.0"
@@ -31,8 +30,7 @@
     "concolor": "^0.1.9"
   },
   "devDependencies": {
-    "eslint": "^5.11.1",
-    "metaschema": "0.0.29",
+    "eslint": "^5.12.0",
     "metatests": "^0.4.0"
   }
 }
