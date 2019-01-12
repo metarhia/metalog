@@ -14,6 +14,9 @@ const DAY_MILLISECONDS = common.duration('1d');
 const DEFAULT_WRITE_INTERVAL = common.duration('3s');
 const DEFAULT_BUFFER_SIZE = 64 * 1024;
 const DEFAULT_KEEP_DAYS = 1;
+const STACK_AT = '  at ';
+const TYPE_LENGTH = 6;
+const LINE_SEPARATOR = ';';
 
 const LOG_TYPES = ['error', 'warn', 'info', 'debug', 'log'];
 
@@ -45,7 +48,18 @@ const logTypes = types => {
   return flags;
 };
 
-const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
+const replace = (str, substr, newstr) => {
+  if (substr === '') return str;
+  let src = str;
+  let res = '';
+  do {
+    const index = src.indexOf(substr);
+    if (index === -1) return res + src;
+    const start = src.substring(0, index);
+    src = src.substring(index + substr.length, src.length);
+    res += start + newstr;
+  } while (true);
+};
 
 const nowDays = () => {
   const now = new Date();
@@ -194,7 +208,7 @@ class Logger extends events.EventEmitter {
     this.writeInterval = writeInterval || DEFAULT_WRITE_INTERVAL;
     this.writeBuffer = writeBuffer || DEFAULT_BUFFER_SIZE;
     this.keepDays = keepDays || DEFAULT_KEEP_DAYS;
-    this.home = home ? new RegExp(common.escapeRegExp(home), 'g') : null;
+    this.home = home;
     this.stream = null;
     this.reopenTimer = null;
     this.flushTimer = null;
@@ -310,13 +324,13 @@ class Logger extends events.EventEmitter {
       const markColor = typeColor[type];
       const time = normalColor(dateTime.substring(11, 19));
       const id = normalColor(this.workerId);
-      const mark = markColor(' ' + type.padEnd(7));
+      const mark = markColor(' ' + type.padEnd(TYPE_LENGTH));
       const msg = normalColor(message);
       const line = `${time}  ${id}  ${mark}  ${msg}\n`;
       process.stdout.write(line);
     }
     if (this.toFile[type]) {
-      const msg = lineStack(message);
+      const msg = replace(message, '\n', LINE_SEPARATOR);
       const line = `${dateTime} [${type}] ${msg}\n`;
       const buffer = Buffer.from(line);
       this.buffer.push(buffer);
@@ -350,8 +364,10 @@ class Logger extends events.EventEmitter {
 
   normalizeStack(stack) {
     if (!stack) return 'no data to log';
-    let res = stack.replace(/\s+at\s+/g, '\n\t');
-    if (this.home) res = res.replace(this.home, '');
+    const index = stack.indexOf(STACK_AT);
+    if (index === -1) return stack;
+    let res = replace(stack, STACK_AT, '');
+    if (this.home) res = replace(res, this.home, '');
     return res;
   }
 }
