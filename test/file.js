@@ -61,7 +61,7 @@ metatests.test('logger.slow', test => {
 });
 
 metatests.test('logger.db', test => {
-  logger1.slow('Database test log message');
+  logger1.db('Database test log message');
   test.end();
 });
 
