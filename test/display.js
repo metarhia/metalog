@@ -23,6 +23,7 @@ appLogger.info('Info test log message');
 appLogger.debug('Debug test log message');
 appLogger.access('Access test log message');
 appLogger.slow('Slow test log message');
+appLogger.db('Database test log message');
 
 const defaultLogger = logger.bind();
 defaultLogger.info('Write to default application logger');

@@ -8,7 +8,7 @@ const concolor = require('concolor');
 const DAY_MILLISECONDS = common.duration('1d');
 
 const LOG_TYPES = [
-  'system', 'fatal', 'error', 'warn', 'info', 'debug', 'access', 'slow'
+  'system', 'fatal', 'error', 'warn', 'info', 'debug', 'access', 'slow', 'db'
 ];
 
 const typeColor = concolor({
@@ -19,7 +19,8 @@ const typeColor = concolor({
   info: 'blue/white',
   debug: 'black/green',
   access: 'black/white',
-  slow: 'b,yellow/blue'
+  slow: 'b,yellow/blue',
+  db: 'b,white/green',
 });
 
 const textColor = concolor({
@@ -30,7 +31,8 @@ const textColor = concolor({
   info: 'white',
   debug: 'b,green',
   access: 'white',
-  slow: 'b,blue'
+  slow: 'b,blue',
+  db: 'green',
 });
 
 // Convert array to boolean flags
@@ -93,6 +95,10 @@ class ApplicationLogger {
 
   slow(message) {
     this.logger.write('slow', message, this.application);
+  }
+
+  db(message) {
+    this.logger.write('db', message, this.application);
   }
 
 }

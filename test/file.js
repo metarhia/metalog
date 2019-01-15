@@ -60,6 +60,11 @@ metatests.test('logger.slow', test => {
   test.end();
 });
 
+metatests.test('logger.db', test => {
+  logger1.slow('Database test log message');
+  test.end();
+});
+
 const logger2 = createLogger();
 
 metatests.test('logger write more then 60Mb', test => {
