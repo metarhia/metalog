@@ -251,7 +251,7 @@ class Logger extends events.EventEmitter {
 
   flush(callback) {
     if (!this.active || this.lock || !this.buffer.length) {
-      if (callback) callback(new Error("Can't flush log buffer"));
+      if (callback) callback(new Error('Cannot flush log buffer'));
       return;
     }
     this.lock = true;

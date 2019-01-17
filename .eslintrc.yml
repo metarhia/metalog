@@ -4,6 +4,8 @@ env:
 extends:
   - eslint:recommended
   - plugin:prettier/recommended
+plugins:
+  - prettier
 rules:
   indent:
     - error
@@ -155,10 +157,8 @@ rules:
   object-shorthand:
     - error
     - always
-  plugins:
-  - prettier
-  rules:
-    prettier/prettier: error
+  prettier/prettier:
+    - error
   prefer-arrow-callback:
     - error
   prefer-const:
