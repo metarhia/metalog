@@ -20,7 +20,8 @@
   "readmeFilename": "README.md",
   "scripts": {
     "test": "eslint . && metatests test/",
-    "lint": "eslint ."
+    "lint": "eslint . && prettier --debug-check \"**/*.js\" \"**/*.json\" \"**/*.md\" .eslintrc .prettierrc",
+    "fmt": "prettier --write \"**/*.js\" \"**/*.json\" \"**/*.md\" .eslintrc .prettierrc --ignore-path .gitignore"
   },
   "engines": {
     "node": ">=6.0.0"
@@ -31,6 +32,9 @@
   },
   "devDependencies": {
     "eslint": "^5.12.0",
-    "metatests": "^0.4.0"
+    "eslint-config-prettier": "^3.5.0",
+    "eslint-plugin-prettier": "^3.0.1",
+    "metatests": "^0.4.0",
+    "prettier": "1.15.3"
   }
 }

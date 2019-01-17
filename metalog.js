@@ -8,7 +8,15 @@ const concolor = require('concolor');
 const DAY_MILLISECONDS = common.duration('1d');
 
 const LOG_TYPES = [
-  'system', 'fatal', 'error', 'warn', 'info', 'debug', 'access', 'slow', 'db'
+  'system',
+  'fatal',
+  'error',
+  'warn',
+  'info',
+  'debug',
+  'access',
+  'slow',
+  'db',
 ];
 
 const typeColor = concolor({
@@ -54,7 +62,6 @@ const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
 
 // Logger wrapper to bind it to certain application
 class ApplicationLogger {
-
   // logger <Logger>
   // application <string> name
   constructor(logger, application = 'default') {
@@ -100,11 +107,9 @@ class ApplicationLogger {
   db(message) {
     this.logger.write('db', message, this.application);
   }
-
 }
 
 class Logger extends events.EventEmitter {
-
   // path <string> log directory
   // node <string> nodeId
   // writeInterval <number> flush log to disk interval
@@ -200,7 +205,13 @@ class Logger extends events.EventEmitter {
       }
       const now = new Date();
       const date = new Date(
-        now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0,
+        0,
+        0,
+        0
       );
       const time = date.getTime();
       let i, fileName, fileTime, fileAge;
@@ -230,7 +241,7 @@ class Logger extends events.EventEmitter {
     }
     if (this.toFile[type]) {
       const time = date.toISOString();
-      const multiline = (/[\n\r]/g).test(message);
+      const multiline = /[\n\r]/g.test(message);
       const line = multiline ? lineStack(message) : message;
       const data = `${time} [${type}] ${this.node}/${application} ${line}\n`;
       const buffer = Buffer.from(data);
@@ -240,7 +251,7 @@ class Logger extends events.EventEmitter {
 
   flush(callback) {
     if (!this.active || this.lock || !this.buffer.length) {
-      if (callback) callback(new Error('Can\'t flush log buffer'));
+      if (callback) callback(new Error('Cannot flush log buffer'));
       return;
     }
     this.lock = true;
@@ -255,7 +266,6 @@ class Logger extends events.EventEmitter {
   bind(application) {
     return new ApplicationLogger(this, application);
   }
-
 }
 
 module.exports = args => new Logger(args);
