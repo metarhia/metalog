@@ -14,5 +14,5 @@ $ npm install metalog
 
 ## Contributors
 
-  - Timur Shemsedinov (marcusaurelius) <timur.shemsedinov@gmail.com>
-  - See github for full [contributors list](https://github.com/metarhia/metalog/graphs/contributors)
+- Timur Shemsedinov (marcusaurelius) <timur.shemsedinov@gmail.com>
+- See github for full [contributors list](https://github.com/metarhia/metalog/graphs/contributors)

@@ -1,7 +1,9 @@
 env:
   node: true
   es6: true
-extends: 'eslint:recommended'
+extends:
+  - eslint:recommended
+  - plugin:prettier/recommended
 rules:
   indent:
     - error
@@ -153,6 +155,10 @@ rules:
   object-shorthand:
     - error
     - always
+  plugins:
+  - prettier
+  rules:
+    prettier/prettier: error
   prefer-arrow-callback:
     - error
   prefer-const:

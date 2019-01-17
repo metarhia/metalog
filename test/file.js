@@ -3,14 +3,15 @@
 const metatests = require('metatests');
 const metalog = require('..');
 
-const createLogger = () => metalog({
-  path: './log',
-  node: 'S1N1',
-  writeInterval: 3000,
-  writeBuffer: 64 * 1024,
-  keepDays: 5,
-  toStdout: []
-}).bind('app1');
+const createLogger = () =>
+  metalog({
+    path: './log',
+    node: 'S1N1',
+    writeInterval: 3000,
+    writeBuffer: 64 * 1024,
+    keepDays: 5,
+    toStdout: [],
+  }).bind('app1');
 
 const logger1 = createLogger();
 

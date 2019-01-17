@@ -8,7 +8,7 @@ const logger = metalog({
   application: 'app1',
   writeInterval: 3000,
   writeBuffer: 64 * 1024,
-  keepDays: 5
+  keepDays: 5,
 });
 
 const appLogger = logger.bind('app');
@@ -29,4 +29,3 @@ const defaultLogger = logger.bind();
 defaultLogger.info('Write to default application logger');
 
 logger.close();
-
