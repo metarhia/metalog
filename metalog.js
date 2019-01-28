@@ -3,6 +3,7 @@
 const fs = require('fs');
 const events = require('events');
 const common = require('@metarhia/common');
+const { WritableFileStream } = require('metastreams');
 const concolor = require('concolor');
 
 const DAY_MILLISECONDS = common.duration('1d');
@@ -128,7 +129,7 @@ class Logger extends events.EventEmitter {
     this.writeInterval = writeInterval || 3000;
     this.writeBuffer = writeBuffer || 64 * 1024;
     this.keepDays = keepDays || 0;
-    this.options = { flags: 'a', highWaterMark: this.writeBuffer };
+    this.options = { flags: 'a', bufferSize: this.writeBuffer };
     this.stream = null;
     this.reopenTimer = null;
     this.flushTimer = null;
@@ -156,7 +157,7 @@ class Logger extends events.EventEmitter {
       this.close();
     }, nextReopen);
     if (this.keepDays) this.rotate();
-    this.stream = fs.createWriteStream(this.file, this.options);
+    this.stream = new WritableFileStream(this.file, this.options);
     this.flushTimer = setInterval(() => {
       this.flush();
     }, this.writeInterval);
