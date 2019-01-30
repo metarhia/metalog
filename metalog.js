@@ -250,16 +250,26 @@ class Logger extends events.EventEmitter {
   }
 
   flush(callback) {
-    if (!this.active || this.lock || !this.buffer.length) {
-      if (callback) callback(new Error('Cannot flush log buffer'));
+    if (this.lock) {
+      if (callback) this.once('unlocked', callback);
+      return;
+    }
+    if (this.buffer.length === 0) {
+      if (callback) callback();
+      return;
+    }
+    if (!this.active) {
+      if (callback)
+        callback(new Error('Cannot flush log buffer: logger is not opened'));
       return;
     }
     this.lock = true;
     const buffer = Buffer.concat(this.buffer);
     this.buffer.length = 0;
-    this.stream.write(buffer, err => {
+    this.stream.write(buffer, () => {
       this.lock = false;
-      if (callback) callback(err);
+      this.emit('unlocked');
+      if (callback) callback();
     });
   }
 
