@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const util = require('util');
 const events = require('events');
 const common = require('@metarhia/common');
 const { WritableFileStream } = require('metastreams');
@@ -70,42 +71,51 @@ class ApplicationLogger {
     this.application = application;
   }
 
-  system(message) {
+  system(...args) {
+    const message = util.format(...args);
     this.logger.write('system', message, this.application);
   }
 
-  fatal(message) {
-    const msg = normalizeStack(message);
-    this.logger.write('fatal', msg, this.application);
+  fatal(...args) {
+    const formatted = util.format(...args);
+    const message = normalizeStack(formatted);
+    this.logger.write('fatal', message, this.application);
   }
 
-  error(message) {
-    const msg = normalizeStack(message);
-    this.logger.write('error', msg, this.application);
+  error(...args) {
+    const formatted = util.format(...args);
+    const message = normalizeStack(formatted);
+    this.logger.write('error', message, this.application);
   }
 
-  warn(message) {
+  warn(...args) {
+    const message = util.format(...args);
     this.logger.write('warn', message, this.application);
   }
 
-  info(message) {
+  info(...args) {
+    const message = util.format(...args);
     this.logger.write('info', message, this.application);
   }
 
-  debug(message) {
-    const msg = normalizeStack(message);
-    this.logger.write('debug', msg, this.application);
+  debug(...args) {
+    const formatted = util.format(...args);
+    const message = normalizeStack(formatted);
+    this.logger.write('debug', message, this.application);
   }
 
-  access(message) {
+  access(...args) {
+    const message = util.format(...args);
     this.logger.write('access', message, this.application);
   }
 
-  slow(message) {
+  slow(...args) {
+    const message = util.format(...args);
     this.logger.write('slow', message, this.application);
   }
 
-  db(message) {
+  db(...args) {
+    const message = util.format(...args);
     this.logger.write('db', message, this.application);
   }
 }
