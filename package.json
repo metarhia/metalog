@@ -16,8 +16,9 @@
     "type": "git",
     "url": "https://github.com/metarhia/metalog"
   },
-  "main": "./metalog.js",
+  "main": "metalog.js",
   "readmeFilename": "README.md",
+  "files": [],
   "scripts": {
     "test": "eslint . && metatests test/",
     "lint": "eslint . && prettier -c \"**/*.js\" \"**/*.json\" \"**/*.md\" \".*rc\" \"**/*.yml\"",
