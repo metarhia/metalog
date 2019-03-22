@@ -137,6 +137,7 @@ class Logger extends events.EventEmitter {
     this.buffer = [];
     this.file = '';
     this.toFile = logTypes(toFile);
+    this.fsEnabled = Object.keys(this.toFile).length !== 0;
     this.toStdout = logTypes(toStdout);
     this.open();
   }
@@ -144,6 +145,10 @@ class Logger extends events.EventEmitter {
   open() {
     if (this.active) return;
     this.active = true;
+    if (!this.fsEnabled) {
+      process.nextTick(() => this.emit('open'));
+      return;
+    }
     const date = common.nowDate();
     this.file = `${this.path}/${date}-${this.node}.log`;
     const now = new Date();
@@ -171,6 +176,11 @@ class Logger extends events.EventEmitter {
 
   close() {
     if (!this.active) return;
+    if (!this.fsEnabled) {
+      this.active = false;
+      this.emit('close');
+      return;
+    }
     const stream = this.stream;
     if (!stream || stream.destroyed || stream.closed) return;
     this.flush(err => {
