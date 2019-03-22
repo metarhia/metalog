@@ -20,7 +20,7 @@
   "readmeFilename": "README.md",
   "files": [],
   "scripts": {
-    "test": "eslint . && metatests test/",
+    "test": "npm run -s lint && metatests test/",
     "lint": "eslint . && prettier -c \"**/*.js\" \"**/*.json\" \"**/*.md\" \".*rc\" \"**/*.yml\"",
     "fmt": "prettier --write \"**/*.js\" \"**/*.json\" \"**/*.md\" \".*rc\" \"**/*.yml\""
   },
