@@ -3,119 +3,117 @@
 const metatests = require('metatests');
 const metalog = require('..');
 
-const createLogger = () =>
-  metalog({
+const createLogger = () => {
+  const logger = metalog({
     path: './log',
     node: 'S1N1',
     writeInterval: 3000,
     writeBuffer: 64 * 1024,
     keepDays: 5,
     toStdout: [],
-  }).bind('app1');
-
-const logger1 = createLogger();
-
-metatests.test('logger.open', test => {
-  logger1.logger.on('open', () => {
-    test.end();
   });
-  logger1.logger.on('error', err => {
-    test.error(err);
-    process.exit(1);
-  });
-  logger1.logger.open();
-});
+  const appLogger = logger.bind('app1');
+  return { logger, appLogger };
+};
 
-metatests.test('logger.system', test => {
-  logger1.system('System test log message');
-  test.end();
-});
+metatests.test(
+  'logger flow',
+  test => {
+    const { logger, appLogger } = createLogger();
 
-metatests.test('logger.fatal', test => {
-  logger1.fatal('Fatal test log message');
-  test.end();
-});
+    logger.on('error', err => {
+      test.fail('logger error', err);
+      logger.close();
+    });
 
-metatests.test('logger.error', test => {
-  logger1.error('Error test log message');
-  test.end();
-});
+    logger.once('close', () => test.end());
 
-metatests.test('logger.warn', test => {
-  logger1.warn('Warning test log message');
-  test.end();
-});
+    test.test('open', test => {
+      logger.on('open', () => test.end());
+      logger.open();
+    });
 
-metatests.test('logger.info', test => {
-  logger1.info('Info test log message');
-  test.end();
-});
+    test.testSync('logger.system', () => {
+      appLogger.system('System test log message');
+    });
 
-metatests.test('logger.debug', test => {
-  logger1.debug('Debug test log message');
-  test.end();
-});
+    test.testSync('logger.fatal', () => {
+      appLogger.fatal('Fatal test log message');
+    });
 
-metatests.test('logger.slow', test => {
-  logger1.slow('Slow test log message');
-  test.end();
-});
+    test.testSync('logger.error', () => {
+      appLogger.error('Error test log message');
+    });
 
-metatests.test('logger.db', test => {
-  logger1.db('Database test log message');
-  test.end();
-});
+    test.testSync('logger.warn', () => {
+      appLogger.warn('Warning test log message');
+    });
 
-const logger2 = createLogger();
+    test.testSync('logger.info', () => {
+      appLogger.info('Info test log message');
+    });
+
+    test.testSync('logger.debug', () => {
+      appLogger.debug('Debug test log message');
+    });
+
+    test.testSync('logger.slow', () => {
+      appLogger.slow('Slow test log message');
+    });
+
+    test.testSync('logger.db', () => {
+      appLogger.db('Database test log message');
+    });
+
+    test.testSync('close', () => {
+      logger.close();
+    });
+  },
+  { dependentSubtests: true }
+);
 
 metatests.test('logger write more then 60Mb', test => {
-  logger2.logger.open();
-  logger2.logger.toStdout.INFO = false;
+  const { logger, appLogger } = createLogger();
+
+  logger.open();
   const begin = process.hrtime();
   for (let i = 0; i < 1000000; i++) {
-    logger2.info('Write more then 60Mb logs, line: ' + i);
+    appLogger.info('Write more then 60Mb logs, line: ' + i);
   }
-  logger2.logger.close();
-  logger2.logger.on('close', () => {
-    const end = process.hrtime(begin);
-    const time = end[0] * 1e9 + end[1];
-    logger2.logger.open();
-    logger2.logger.on('open', () => {
-      logger2.logger.toStdout.INFO = true;
-      logger2.info(time);
-      test.end();
-    });
-  });
-});
 
-const logger3 = createLogger();
+  logger.once('close', () => {
+    const end = process.hrtime(begin);
+    test.log('time: ', end[0] * 1e9 + end[1]);
+    test.end();
+  });
+
+  logger.close();
+});
 
 metatests.test('logger.close', test => {
-  logger3.logger.open();
-  logger3.info('Info log message');
-  logger3.logger.close();
-  logger3.logger.on('close', () => {
-    test.end();
-  });
+  const { logger, appLogger } = createLogger();
+  logger.open();
+  appLogger.info('Info log message');
+  logger.close();
+  logger.once('close', () => test.end());
 });
-
-const logger4 = createLogger();
 
 metatests.test('logger.close after close', test => {
-  logger4.logger.open();
-  logger4.info('Info log message');
-  logger4.logger.close();
-  logger4.logger.on('close', () => {
-    logger4.logger.removeAllListeners('close');
-    logger4.logger.close();
-    logger4.logger.on('close', test.mustNotCall());
+  const { logger, appLogger } = createLogger();
+  logger.open();
+  appLogger.info('Info log message');
+  logger.close();
+  logger.once('close', () => {
+    logger.removeAllListeners('close');
+    logger.close();
+    logger.on('close', test.mustNotCall());
     test.end();
   });
 });
 
-const logger5 = createLogger();
-
-metatests.test('logger.rotate', test => {
-  logger5.logger.rotate();
-  test.end();
+metatests.testSync('logger.rotate', test => {
+  const { logger } = createLogger();
+  logger.rotate();
+  logger.once('close', () => test.end());
+  logger.close();
 });
