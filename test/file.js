@@ -3,7 +3,7 @@
 const metatests = require('metatests');
 const metalog = require('..');
 
-const createLogger = () =>
+const createLogger = (options = {}) =>
   metalog({
     path: './log',
     node: 'S1N1',
@@ -11,6 +11,7 @@ const createLogger = () =>
     writeBuffer: 64 * 1024,
     keepDays: 5,
     toStdout: [],
+    ...options,
   }).bind('app1');
 
 const logger1 = createLogger();
@@ -118,4 +119,20 @@ const logger5 = createLogger();
 metatests.test('logger.rotate', test => {
   logger5.logger.rotate();
   test.end();
+});
+
+metatests.test('Logger#isActive', test => {
+  const { logger } = createLogger({ toStdout: ['info'], toFile: ['warn'] });
+  test.assertNot(logger.isActive('info'));
+  test.assertNot(logger.isActive('warn'));
+  test.assertNot(logger.isActive('db'));
+
+  logger.on('open', () => {
+    test.assert(logger.isActive('info'));
+    test.assert(logger.isActive('warn'));
+    test.assertNot(logger.isActive('db'));
+    logger.on('close', () => test.end());
+    logger.close();
+  });
+  logger.open();
 });

@@ -287,6 +287,13 @@ class Logger extends events.EventEmitter {
   bind(application) {
     return new ApplicationLogger(this, application);
   }
+
+  // Checks whether passed `type` of logs is active.
+  //   type <string> logger type
+  // Returns: <boolean>
+  isActive(type) {
+    return this.active && Boolean(this.toStdout[type] || this.toFile[type]);
+  }
 }
 
 module.exports = args => new Logger(args);
