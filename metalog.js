@@ -44,16 +44,14 @@ const textColor = concolor({
   db: 'green',
 });
 
-// Convert array to boolean flags
+// Convert array to boolean flags object
 //   types <string[]>
 // Returns: <Object>
-const logTypes = types => {
-  types = types || LOG_TYPES;
-  const flags = {};
-  let type;
-  for (type of types) flags[type] = true;
-  return flags;
-};
+const logTypes = types =>
+  common
+    .iter(types)
+    .map(t => [t, true])
+    .toObject();
 
 const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
 
@@ -120,25 +118,26 @@ class Logger extends events.EventEmitter {
   // toStdout <string[]> write log types to stdout
   constructor(options) {
     super();
-    const { path, node } = options;
-    const { writeInterval, writeBuffer, keepDays } = options;
-    const { toFile, toStdout } = options;
-    this.active = false;
-    this.path = path;
-    this.node = node;
-    this.writeInterval = writeInterval || 3000;
-    this.writeBuffer = writeBuffer || 64 * 1024;
-    this.keepDays = keepDays || 0;
+    ({
+      path: this.path,
+      node: this.node,
+      toFile: this.toFile = LOG_TYPES,
+      toStdout: this.toStdout = LOG_TYPES,
+      writeInterval: this.writeInterval = 3000,
+      writeBuffer: this.writeBuffer = 64 * 1024,
+      keepDays: this.keepDays = 0,
+    } = options);
     this.options = { flags: 'a', bufferSize: this.writeBuffer };
+    this.fsEnabled = this.toFile.length !== 0;
+    this.toFile = logTypes(this.toFile);
+    this.toStdout = logTypes(this.toStdout);
+    this.active = false;
     this.stream = null;
     this.reopenTimer = null;
     this.flushTimer = null;
     this.lock = false;
     this.buffer = [];
     this.file = '';
-    this.toFile = logTypes(toFile);
-    this.fsEnabled = Object.keys(this.toFile).length !== 0;
-    this.toStdout = logTypes(toStdout);
     this.open();
   }
 
