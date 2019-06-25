@@ -181,16 +181,16 @@ class Logger extends events.EventEmitter {
       this.emit('close');
       return;
     }
+    clearInterval(this.flushTimer);
+    clearTimeout(this.reopenTimer);
+    this.flushTimer = null;
+    this.reopenTimer = null;
     const stream = this.stream;
     if (!stream || stream.destroyed || stream.closed) return;
     this.flush(err => {
       if (err) return;
       this.active = false;
       this.stream.end(() => {
-        clearInterval(this.flushTimer);
-        clearTimeout(this.reopenTimer);
-        this.flushTimer = null;
-        this.reopenTimer = null;
         const fileName = this.file;
         this.emit('close');
         fs.stat(fileName, (err, stats) => {
