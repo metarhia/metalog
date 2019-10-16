@@ -180,16 +180,25 @@ class Logger extends events.EventEmitter {
   }
 
   close() {
-    if (!this.active) return;
+    if (!this.active) {
+      this.emit('close');
+      return;
+    }
     if (!this.fsEnabled) {
       this.active = false;
       this.emit('close');
       return;
     }
     const stream = this.stream;
-    if (!stream || stream.destroyed || stream.closed) return;
+    if (!stream || stream.destroyed || stream.closed) {
+      this.emit('close');
+      return;
+    }
     this.flush(err => {
-      if (err) return;
+      if (err) {
+        this.emit('close');
+        return;
+      }
       this.active = false;
       this.stream.end(() => {
         clearInterval(this.flushTimer);
