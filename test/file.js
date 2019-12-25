@@ -24,6 +24,7 @@ metatests.test('logger.open', test => {
     process.exit(1);
   });
   logger1.logger.open();
+  logger1.logger.close();
 });
 
 metatests.test('logger.system', test => {
@@ -66,6 +67,10 @@ metatests.test('logger.db', test => {
   test.end();
 });
 
+setTimeout(() => {
+  logger1.logger.close();
+}, 500);
+
 const logger2 = createLogger();
 
 metatests.test('logger write more then 60Mb', test => {
@@ -79,12 +84,9 @@ metatests.test('logger write more then 60Mb', test => {
   logger2.logger.on('close', () => {
     const end = process.hrtime(begin);
     const time = end[0] * 1e9 + end[1];
-    logger2.logger.open();
-    logger2.logger.on('open', () => {
-      logger2.logger.toStdout.INFO = true;
-      logger2.info(time);
-      test.end();
-    });
+    console.log({ time });
+    logger2.logger.close();
+    test.end();
   });
 });
 
@@ -93,10 +95,10 @@ const logger3 = createLogger();
 metatests.test('logger.close', test => {
   logger3.logger.open();
   logger3.info('Info log message');
-  logger3.logger.close();
   logger3.logger.on('close', () => {
     test.end();
   });
+  logger3.logger.close();
 });
 
 const logger4 = createLogger();
@@ -107,8 +109,8 @@ metatests.test('logger.close after close', test => {
   logger4.logger.close();
   logger4.logger.on('close', () => {
     logger4.logger.removeAllListeners('close');
-    logger4.logger.close();
     logger4.logger.on('close', test.mustNotCall());
+    logger4.logger.close();
     test.end();
   });
 });
@@ -117,5 +119,6 @@ const logger5 = createLogger();
 
 metatests.test('logger.rotate', test => {
   logger5.logger.rotate();
+  logger5.logger.close();
   test.end();
 });
