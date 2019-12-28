@@ -61,20 +61,22 @@ const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
 class Logger extends EventEmitter {
   // path <string> log directory
-  // node <string> nodeId
+  // workerId <string> workwr process or thread id
   // writeInterval <number> flush log to disk interval
   // writeBuffer <number> buffer size 64kb
   // keepDays <number> delete files after N days, 0 to disable
   // toFile <string[]> write log types to file
   // toStdout <string[]> write log types to stdout
+  // Writable <class> writable stream class
   constructor(options) {
     super();
-    const { path, node } = options;
+    const { path, workerId = 0, Writable = WritableFileStream } = options;
     const { writeInterval, writeBuffer, keepDays } = options;
     const { toFile, toStdout } = options;
     this.active = false;
     this.path = path;
-    this.node = node;
+    this.workerId = `W${workerId}`;
+    this.Writable = Writable;
     this.writeInterval = writeInterval || 3000;
     this.writeBuffer = writeBuffer || 64 * 1024;
     this.keepDays = keepDays || 0;
@@ -99,7 +101,7 @@ class Logger extends EventEmitter {
       return;
     }
     const date = common.nowDate();
-    this.file = `${this.path}/${date}-${this.node}.log`;
+    this.file = `${this.path}/${date}-${this.workerId}.log`;
     const now = new Date();
     const nextDate = new Date();
     nextDate.setUTCHours(0, 0, 0, 0);
@@ -111,7 +113,7 @@ class Logger extends EventEmitter {
       this.close();
     }, nextReopen);
     if (this.keepDays) this.rotate();
-    this.stream = new WritableFileStream(this.file, this.options);
+    this.stream = new this.Writable(this.file, this.options);
     this.flushTimer = setInterval(() => {
       this.flush();
     }, this.writeInterval);
@@ -182,22 +184,23 @@ class Logger extends EventEmitter {
     });
   }
 
-  write(type, message, application = 'default') {
+  write(type, message) {
     const date = new Date();
     if (this.toStdout[type]) {
       const normalColor = textColor[type];
       const markColor = typeColor[type];
       const time = normalColor(date.toTimeString().substring(0, 8));
+      const id = normalColor(this.workerId);
       const mark = markColor(' ' + type.padEnd(7));
-      const msg = normalColor(`${this.node}/${application}  ${message}`);
-      const line = `${time}  ${mark}  ${msg}`;
+      const msg = normalColor(message);
+      const line = `${time}  ${id}  ${mark}  ${msg}`;
       process.stdout.write(`${line}\n`);
     }
     if (this.toFile[type]) {
       const time = date.toISOString();
       const multiline = /[\n\r]/g.test(message);
       const line = multiline ? lineStack(message) : message;
-      const data = `${time} [${type}] ${this.node}/${application} ${line}\n`;
+      const data = `${time} [${type}] ${line}\n`;
       const buffer = Buffer.from(data);
       this.buffer.push(buffer);
     }

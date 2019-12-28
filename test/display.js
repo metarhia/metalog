@@ -4,8 +4,7 @@ const metalog = require('..');
 
 const logger = metalog({
   path: './log',
-  node: 'S1N1',
-  application: 'app1',
+  workerId: 7,
   writeInterval: 3000,
   writeBuffer: 64 * 1024,
   keepDays: 5,
