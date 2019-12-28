@@ -11,21 +11,16 @@ const logger = metalog({
   keepDays: 5,
 });
 
-const appLogger = logger.bind('app');
-
 const stack = new Error('Stack test log message').stack;
-appLogger.debug(stack);
-appLogger.system('System test log message');
-appLogger.fatal('Fatal test log message');
-appLogger.error('Error test log message');
-appLogger.warn('Warning test log message');
-appLogger.info('Info test log message');
-appLogger.debug('Debug test log message');
-appLogger.access('Access test log message');
-appLogger.slow('Slow test log message');
-appLogger.db('Database test log message');
-
-const defaultLogger = logger.bind();
-defaultLogger.info('Write to default application logger');
+logger.debug(stack);
+logger.system('System test log message');
+logger.fatal('Fatal test log message');
+logger.error('Error test log message');
+logger.warn('Warning test log message');
+logger.info('Info test log message');
+logger.debug('Debug test log message');
+logger.access('Access test log message');
+logger.slow('Slow test log message');
+logger.db('Database test log message');
 
 logger.close();

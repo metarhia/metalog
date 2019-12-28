@@ -59,55 +59,6 @@ const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
 
 const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
-// Logger wrapper to bind it to certain application
-class ApplicationLogger {
-  // logger <Logger>
-  // application <string> name
-  constructor(logger, application = 'default') {
-    this.logger = logger;
-    this.application = application;
-  }
-
-  system(message) {
-    this.logger.write('system', message, this.application);
-  }
-
-  fatal(message) {
-    const msg = normalizeStack(message);
-    this.logger.write('fatal', msg, this.application);
-  }
-
-  error(message) {
-    const msg = normalizeStack(message);
-    this.logger.write('error', msg, this.application);
-  }
-
-  warn(message) {
-    this.logger.write('warn', message, this.application);
-  }
-
-  info(message) {
-    this.logger.write('info', message, this.application);
-  }
-
-  debug(message) {
-    const msg = normalizeStack(message);
-    this.logger.write('debug', msg, this.application);
-  }
-
-  access(message) {
-    this.logger.write('access', message, this.application);
-  }
-
-  slow(message) {
-    this.logger.write('slow', message, this.application);
-  }
-
-  db(message) {
-    this.logger.write('db', message, this.application);
-  }
-}
-
 class Logger extends EventEmitter {
   // path <string> log directory
   // node <string> nodeId
@@ -277,8 +228,43 @@ class Logger extends EventEmitter {
     });
   }
 
-  bind(application) {
-    return new ApplicationLogger(this, application);
+  system(message) {
+    this.write('system', message);
+  }
+
+  fatal(message) {
+    const msg = normalizeStack(message);
+    this.write('fatal', msg);
+  }
+
+  error(message) {
+    const msg = normalizeStack(message);
+    this.write('error', msg);
+  }
+
+  warn(message) {
+    this.write('warn', message);
+  }
+
+  info(message) {
+    this.write('info', message);
+  }
+
+  debug(message) {
+    const msg = normalizeStack(message);
+    this.write('debug', msg);
+  }
+
+  access(message) {
+    this.write('access', message);
+  }
+
+  slow(message) {
+    this.write('slow', message);
+  }
+
+  db(message) {
+    this.write('db', message);
   }
 }
 
