@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const events = require('events');
+const { EventEmitter } = require('events');
 const common = require('@metarhia/common');
 const { WritableFileStream } = require('metastreams');
 const concolor = require('concolor');
@@ -110,7 +110,7 @@ class ApplicationLogger {
   }
 }
 
-class Logger extends events.EventEmitter {
+class Logger extends EventEmitter {
   // path <string> log directory
   // node <string> nodeId
   // writeInterval <number> flush log to disk interval
@@ -181,12 +181,16 @@ class Logger extends events.EventEmitter {
       this.emit('close');
       return;
     }
-    const stream = this.stream;
+    const { stream } = this;
     if (!stream || stream.destroyed || stream.closed) return;
     this.flush(err => {
-      if (err) return;
+      if (err) {
+        process.stdout.write(`${err.stack}\n`);
+        this.emit('error', err);
+        return;
+      }
       this.active = false;
-      this.stream.end(() => {
+      stream.end(() => {
         clearInterval(this.flushTimer);
         clearTimeout(this.reopenTimer);
         this.flushTimer = null;
@@ -194,14 +198,9 @@ class Logger extends events.EventEmitter {
         const fileName = this.file;
         this.emit('close');
         fs.stat(fileName, (err, stats) => {
-          if (err) {
-            process.stdout.write(`${err}\n`);
-            return;
-          }
+          if (err) return;
           if (stats.size > 0) return;
-          fs.unlink(this.file, err => {
-            process.stdout.write(`${err}\n`);
-          });
+          fs.unlink(this.file, () => {});
         });
       });
     });
@@ -211,28 +210,23 @@ class Logger extends events.EventEmitter {
     if (!this.keepDays) return;
     fs.readdir(this.path, (err, files) => {
       if (err) {
-        process.stdout.write(`${err}\n`);
+        process.stdout.write(`${err.stack}\n`);
+        this.emit('error', err);
         return;
       }
       const now = new Date();
-      const date = new Date(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0,
-        0,
-        0,
-        0
-      );
+      const year = now.getUTCFullYear();
+      const month = now.getUTCMonth();
+      const day = now.getUTCDate();
+      const date = new Date(year, month, day, 0, 0, 0, 0);
       const time = date.getTime();
-      let i, fileName, fileTime, fileAge;
-      for (i in files) {
-        fileName = files[i];
-        fileTime = new Date(fileName.substring(0, 10)).getTime();
-        fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
+      for (const fileName of files) {
+        const fileTime = new Date(fileName.substring(0, 10)).getTime();
+        const fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
         if (fileAge > 1 && fileAge > this.keepDays - 1) {
           fs.unlink(this.path + '/' + fileName, err => {
-            process.stdout.write(`${err}\n`);
+            process.stdout.write(`${err.stack}\n`);
+            this.emit('error', err);
           });
         }
       }
@@ -270,8 +264,9 @@ class Logger extends events.EventEmitter {
       return;
     }
     if (!this.active) {
-      if (callback)
-        callback(new Error('Cannot flush log buffer: logger is not opened'));
+      const err = new Error('Cannot flush log buffer: logger is not opened');
+      this.emit('error', err);
+      if (callback) callback(err);
       return;
     }
     this.lock = true;
