@@ -59,8 +59,6 @@ const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
 
 const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
-const pad = (s, len, char = ' ') => s + char.repeat(len - s.length);
-
 // Logger wrapper to bind it to certain application
 class ApplicationLogger {
   // logger <Logger>
@@ -245,7 +243,7 @@ class Logger extends events.EventEmitter {
       const normalColor = textColor[type];
       const markColor = typeColor[type];
       const time = normalColor(date.toTimeString().substring(0, 8));
-      const mark = markColor(' ' + pad(type, 7));
+      const mark = markColor(' ' + type.padEnd(7));
       const msg = normalColor(`${this.node}/${application}  ${message}`);
       const line = `${time}  ${mark}  ${msg}`;
       process.stdout.write(`${line}\n`);
