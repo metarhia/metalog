@@ -50,8 +50,9 @@ const textColor = concolor({
 const logTypes = types => {
   types = types || LOG_TYPES;
   const flags = {};
-  let type;
-  for (type of types) flags[type] = true;
+  for (const type of types) {
+    flags[type] = true;
+  }
   return flags;
 };
 
@@ -186,22 +187,21 @@ class Logger extends EventEmitter {
 
   write(type, message) {
     const date = new Date();
+    const dateTime = date.toISOString();
     if (this.toStdout[type]) {
       const normalColor = textColor[type];
       const markColor = typeColor[type];
-      const time = normalColor(date.toTimeString().substring(0, 8));
+      const time = normalColor(dateTime.substring(11, 19));
       const id = normalColor(this.workerId);
       const mark = markColor(' ' + type.padEnd(7));
       const msg = normalColor(message);
-      const line = `${time}  ${id}  ${mark}  ${msg}`;
-      process.stdout.write(`${line}\n`);
+      const line = `${time}  ${id}  ${mark}  ${msg}\n`;
+      process.stdout.write(line);
     }
     if (this.toFile[type]) {
-      const time = date.toISOString();
-      const multiline = /[\n\r]/g.test(message);
-      const line = multiline ? lineStack(message) : message;
-      const data = `${time} [${type}] ${line}\n`;
-      const buffer = Buffer.from(data);
+      const msg = lineStack(message);
+      const line = `${dateTime} [${type}] ${msg}\n`;
+      const buffer = Buffer.from(line);
       this.buffer.push(buffer);
     }
   }
