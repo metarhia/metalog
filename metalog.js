@@ -186,6 +186,21 @@ class Console {
   }
 }
 
+const createLogDir = dir =>
+  new Promise((resolve, reject) => {
+    fs.access(dir, err => {
+      if (!err) resolve();
+      fs.mkdir(dir, err => {
+        if (!err || err.code === 'EEXIST') {
+          resolve();
+          return;
+        }
+        process.stdout.write(`Can not create directory: ${dir}:${err.stack}\n`);
+        reject();
+      });
+    });
+  });
+
 class Logger extends events.EventEmitter {
   // path <string> log directory
   // workerId <string> workwr process or thread id
@@ -229,6 +244,7 @@ class Logger extends events.EventEmitter {
       process.nextTick(() => this.emit('open'));
       return this;
     }
+    await createLogDir(this.path);
     const fileName = common.nowDate() + '-' + this.workerId + '.log';
     this.file = path.join(this.path, fileName);
     const now = new Date();
