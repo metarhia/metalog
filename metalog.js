@@ -88,6 +88,14 @@ class Logger extends EventEmitter {
     this.lock = false;
     this.buffer = [];
     this.file = '';
+    if (!fs.existsSync(path)) {
+      fs.mkdir(path, err => {
+        if (err) {
+          process.stdout.write(`${err.stack}\n`);
+          this.emit('error', err);
+        }
+      });
+    }
     this.toFile = logTypes(toFile);
     this.fsEnabled = Object.keys(this.toFile).length !== 0;
     this.toStdout = logTypes(toStdout);
