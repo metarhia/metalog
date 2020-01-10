@@ -1,3 +1,5 @@
+parserOptions:
+  ecmaVersion: 2019
 env:
   node: true
   es6: true
@@ -104,7 +106,8 @@ rules:
     - always
   space-before-function-paren:
     - error
-    - never
+    - named: never
+      asyncArrow: always
   space-in-parens:
     - error
     - never

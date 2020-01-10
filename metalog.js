@@ -1,6 +1,6 @@
 'use strict';
 
-const fs = require('fs');
+const { readdir, unlink, stat } = require('fs').promises;
 const { EventEmitter } = require('events');
 const common = require('@metarhia/common');
 const { WritableFileStream } = require('metastreams');
@@ -92,9 +92,10 @@ class Logger extends EventEmitter {
     this.fsEnabled = Object.keys(this.toFile).length !== 0;
     this.toStdout = logTypes(toStdout);
     this.open();
+    return new Promise(res => res(this));
   }
 
-  open() {
+  async open() {
     if (this.active) return;
     this.active = true;
     if (!this.fsEnabled) {
@@ -126,7 +127,7 @@ class Logger extends EventEmitter {
     });
   }
 
-  close() {
+  async close() {
     if (!this.active) return;
     if (!this.fsEnabled) {
       this.active = false;
@@ -142,30 +143,28 @@ class Logger extends EventEmitter {
         return;
       }
       this.active = false;
-      stream.end(() => {
+      stream.end(async () => {
         clearInterval(this.flushTimer);
         clearTimeout(this.reopenTimer);
         this.flushTimer = null;
         this.reopenTimer = null;
         const fileName = this.file;
         this.emit('close');
-        fs.stat(fileName, (err, stats) => {
-          if (err) return;
+        try {
+          const stats = await stat(fileName);
           if (stats.size > 0) return;
-          fs.unlink(this.file, () => {});
-        });
+          await unlink(this.file, () => {});
+        } catch {
+          return;
+        }
       });
     });
   }
 
-  rotate() {
+  async rotate() {
     if (!this.keepDays) return;
-    fs.readdir(this.path, (err, files) => {
-      if (err) {
-        process.stdout.write(`${err.stack}\n`);
-        this.emit('error', err);
-        return;
-      }
+    try {
+      const files = await readdir(this.path);
       const now = new Date();
       const year = now.getUTCFullYear();
       const month = now.getUTCMonth();
@@ -176,13 +175,14 @@ class Logger extends EventEmitter {
         const fileTime = new Date(fileName.substring(0, 10)).getTime();
         const fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
         if (fileAge > 1 && fileAge > this.keepDays - 1) {
-          fs.unlink(this.path + '/' + fileName, err => {
-            process.stdout.write(`${err.stack}\n`);
-            this.emit('error', err);
-          });
+          await unlink(this.path + '/' + fileName);
         }
       }
-    });
+    } catch (err) {
+      process.stdout.write(`${err.stack}\n`);
+      this.emit('error', err);
+      return;
+    }
   }
 
   write(type, message) {
@@ -271,4 +271,4 @@ class Logger extends EventEmitter {
   }
 }
 
-module.exports = args => new Logger(args);
+module.exports = Logger;
