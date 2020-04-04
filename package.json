@@ -1,16 +1,26 @@
 {
   "name": "metalog",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Timur Shemsedinov <timur.shemsedinov@gmail.com>",
-  "description": "Meta Logger for Metarhia",
+  "description": "Logger for Metarhia",
   "license": "MIT",
   "keywords": [
     "logger",
     "log",
+    "logging",
     "metarhia",
     "impress",
+    "server",
     "jstp",
-    "globalstorege"
+    "globalstorege",
+    "highload",
+    "cloud",
+    "api",
+    "node",
+    "nodejs",
+    "application-server",
+    "tools",
+    "console"
   ],
   "repository": {
     "type": "git",
