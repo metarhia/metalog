@@ -177,8 +177,10 @@ class Logger extends EventEmitter {
         const fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
         if (fileAge > 1 && fileAge > this.keepDays - 1) {
           fs.unlink(this.path + '/' + fileName, err => {
-            process.stdout.write(`${err.stack}\n`);
-            this.emit('error', err);
+            if (err) {
+              process.stdout.write(`${err.stack}\n`);
+              this.emit('error', err);
+            }
           });
         }
       }
