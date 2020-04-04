@@ -30,6 +30,7 @@
   "dependencies": {
     "@metarhia/common": "^2.1.0",
     "concolor": "^0.1.14",
+    "diff": "^4.0.2",
     "metastreams": "^0.1.2"
   },
   "devDependencies": {
