@@ -137,28 +137,31 @@ class Logger extends events.EventEmitter {
     }
     const { stream } = this;
     if (!stream || stream.destroyed || stream.closed) return;
-    this.flush(err => {
-      if (err) {
-        process.stdout.write(`${err.stack}\n`);
-        this.emit('error', err);
-        return;
-      }
-      this.active = false;
-      stream.end(() => {
-        clearInterval(this.flushTimer);
-        clearTimeout(this.reopenTimer);
-        this.flushTimer = null;
-        this.reopenTimer = null;
-        const fileName = this.file;
-        this.emit('close');
-        fs.stat(fileName, (err, stats) => {
-          if (err) return;
-          if (stats.size > 0) return;
-          fs.unlink(this.file, () => {});
+    return new Promise((resolve, reject) => {
+      this.flush(err => {
+        if (err) {
+          process.stdout.write(`${err.stack}\n`);
+          this.emit('error', err);
+          reject(err);
+          return;
+        }
+        this.active = false;
+        stream.end(() => {
+          clearInterval(this.flushTimer);
+          clearTimeout(this.reopenTimer);
+          this.flushTimer = null;
+          this.reopenTimer = null;
+          const fileName = this.file;
+          this.emit('close');
+          resolve();
+          fs.stat(fileName, (err, stats) => {
+            if (err) return;
+            if (stats.size > 0) return;
+            fs.unlink(this.file, () => {});
+          });
         });
       });
     });
-    await events.once(this, 'close');
   }
 
   rotate() {
