@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const { EventEmitter } = require('events');
+const events = require('events');
 const common = require('@metarhia/common');
 const { WritableFileStream } = require('metastreams');
 const concolor = require('concolor');
@@ -60,7 +60,7 @@ const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
 
 const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
-class Logger extends EventEmitter {
+class Logger extends events.EventEmitter {
   // path <string> log directory
   // workerId <string> workwr process or thread id
   // writeInterval <number> flush log to disk interval
@@ -91,10 +91,10 @@ class Logger extends EventEmitter {
     this.toFile = logTypes(toFile);
     this.fsEnabled = Object.keys(this.toFile).length !== 0;
     this.toStdout = logTypes(toStdout);
-    this.open();
+    return this.open();
   }
 
-  open() {
+  async open() {
     if (this.active) return;
     this.active = true;
     if (!this.fsEnabled) {
@@ -124,9 +124,11 @@ class Logger extends EventEmitter {
     this.stream.on('error', () => {
       this.emit('error', new Error(`Can't open log file: ${this.file}`));
     });
+    await events.once(this, 'open');
+    return this;
   }
 
-  close() {
+  async close() {
     if (!this.active) return;
     if (!this.fsEnabled) {
       this.active = false;
@@ -156,6 +158,7 @@ class Logger extends EventEmitter {
         });
       });
     });
+    await events.once(this, 'close');
   }
 
   rotate() {
