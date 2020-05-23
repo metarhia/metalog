@@ -4,6 +4,8 @@ env:
 extends:
   - eslint:recommended
   - plugin:prettier/recommended
+parserOptions:
+  ecmaVersion: 2020
 rules:
   indent:
     - error
@@ -104,7 +106,9 @@ rules:
     - always
   space-before-function-paren:
     - error
-    - never
+    - anonymous: always
+      named: never
+      asyncArrow: always
   space-in-parens:
     - error
     - never
