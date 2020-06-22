@@ -11,6 +11,7 @@ const createLogger = () =>
     writeBuffer: 64 * 1024,
     keepDays: 5,
     toStdout: [],
+    home: process.cwd(),
   });
 
 (async () => {
@@ -94,6 +95,16 @@ const createLogger = () =>
   metatests.test('logger.rotate', async test => {
     const logger = await createLogger();
     logger.rotate();
+    await logger.close();
+    test.end();
+  });
+
+  metatests.test('Truncate paths in stack traces', async test => {
+    const logger = await createLogger();
+    const message = new Error('Example').stack;
+    const msg = logger.normalizeStack(message);
+    const dir = process.cwd();
+    if (msg.includes(dir)) throw new Error('Path truncation error');
     await logger.close();
     test.end();
   });
