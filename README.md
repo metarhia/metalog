@@ -20,4 +20,5 @@ $ npm install metalog
 
 ## License
 
-This implementation of Web Locks API is [MIT licensed](./LICENSE).
+Copyright (c) 2017-2020 Metarhia contributors.
+Metalog is [MIT licensed](./LICENSE).
