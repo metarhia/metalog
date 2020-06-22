@@ -56,8 +56,6 @@ const logTypes = types => {
   return flags;
 };
 
-const normalizeStack = stack => stack.replace(/\s+at\s+/g, '\n\t');
-
 const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
 class Logger extends events.EventEmitter {
@@ -69,10 +67,11 @@ class Logger extends events.EventEmitter {
   // toFile <string[]> write log types to file
   // toStdout <string[]> write log types to stdout
   // Writable <class> writable stream class
+  // home <string> remove home paths from stack traces
   constructor(options) {
     super();
     const { path, workerId = 0, Writable = WritableFileStream } = options;
-    const { writeInterval, writeBuffer, keepDays } = options;
+    const { writeInterval, writeBuffer, keepDays, home } = options;
     const { toFile, toStdout } = options;
     this.active = false;
     this.path = path;
@@ -81,6 +80,7 @@ class Logger extends events.EventEmitter {
     this.writeInterval = writeInterval || 3000;
     this.writeBuffer = writeBuffer || 64 * 1024;
     this.keepDays = keepDays || 0;
+    this.home = home ? new RegExp(home, 'g') : null;
     this.options = { flags: 'a', bufferSize: this.writeBuffer };
     this.stream = null;
     this.reopenTimer = null;
@@ -239,17 +239,23 @@ class Logger extends events.EventEmitter {
     });
   }
 
+  normalizeStack(stack) {
+    let res = stack.replace(/\s+at\s+/g, '\n\t');
+    if (this.home) res = res.replace(this.home, '');
+    return res;
+  }
+
   system(message) {
     this.write('system', message);
   }
 
   fatal(message) {
-    const msg = normalizeStack(message);
+    const msg = this.normalizeStack(message);
     this.write('fatal', msg);
   }
 
   error(message) {
-    const msg = normalizeStack(message);
+    const msg = this.normalizeStack(message);
     this.write('error', msg);
   }
 
@@ -262,7 +268,7 @@ class Logger extends events.EventEmitter {
   }
 
   debug(message) {
-    const msg = normalizeStack(message);
+    const msg = this.normalizeStack(message);
     this.write('debug', msg);
   }
 
