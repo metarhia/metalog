@@ -95,11 +95,11 @@ class Logger extends events.EventEmitter {
   }
 
   async open() {
-    if (this.active) return;
+    if (this.active) return this;
     this.active = true;
     if (!this.fsEnabled) {
       process.nextTick(() => this.emit('open'));
-      return;
+      return this;
     }
     const date = common.nowDate();
     this.file = `${this.path}/${date}-${this.workerId}.log`;
@@ -129,14 +129,16 @@ class Logger extends events.EventEmitter {
   }
 
   async close() {
-    if (!this.active) return;
+    if (!this.active) return Promise.resolve();
     if (!this.fsEnabled) {
       this.active = false;
       this.emit('close');
-      return;
+      return Promise.resolve();
     }
     const { stream } = this;
-    if (!stream || stream.destroyed || stream.closed) return;
+    if (!stream || stream.destroyed || stream.closed) {
+      return Promise.resolve();
+    }
     return new Promise((resolve, reject) => {
       this.flush(err => {
         if (err) {
