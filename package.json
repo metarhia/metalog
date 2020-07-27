@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@metarhia/common": "^2.1.0",
-    "concolor": "^0.1.14",
+    "concolor": "^0.1.15",
     "metastreams": "^0.1.2"
   },
   "devDependencies": {
@@ -49,6 +49,6 @@
     "eslint-plugin-import": "^2.20.0",
     "eslint-plugin-prettier": "^3.1.1",
     "prettier": "^2.0.5",
-    "metatests": "^0.7.1"
+    "metatests": "^0.7.2"
   }
 }
