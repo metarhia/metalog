@@ -242,6 +242,7 @@ class Logger extends events.EventEmitter {
   }
 
   normalizeStack(stack) {
+    if (!stack) return 'no data to log';
     let res = stack.replace(/\s+at\s+/g, '\n\t');
     if (this.home) res = res.replace(this.home, '');
     return res;
