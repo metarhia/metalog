@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const { sep } = require('path');
 const events = require('events');
 const common = require('@metarhia/common');
 const { WritableFileStream } = require('metastreams');
@@ -102,7 +103,7 @@ class Logger extends events.EventEmitter {
       return this;
     }
     const date = common.nowDate();
-    this.file = `${this.path}/${date}-${this.workerId}.log`;
+    this.file = this.path + sep + date + '-' + this.workerId + '.log';
     const now = new Date();
     const nextDate = new Date();
     nextDate.setUTCHours(0, 0, 0, 0);
@@ -184,7 +185,7 @@ class Logger extends events.EventEmitter {
         const fileTime = new Date(fileName.substring(0, 10)).getTime();
         const fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
         if (fileAge > 1 && fileAge > this.keepDays - 1) {
-          fs.unlink(this.path + '/' + fileName, err => {
+          fs.unlink(this.path + sep + fileName, err => {
             if (err) {
               process.stdout.write(`${err.stack}\n`);
               this.emit('error', err);

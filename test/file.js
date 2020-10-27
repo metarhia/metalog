@@ -104,6 +104,7 @@ const createLogger = () =>
     const message = new Error('Example').stack;
     const msg = logger.normalizeStack(message);
     const dir = process.cwd();
+    console.log(JSON.stringify({ dir, msg, message, home: logger.home }));
     if (msg.includes(dir)) throw new Error('Path truncation error');
     await logger.close();
     test.end();

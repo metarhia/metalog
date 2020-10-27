@@ -1,6 +1,6 @@
 # Meta Logger for Metarhia
 
-[![travis](https://travis-ci.org/metarhia/metalog.svg?branch=master)](https://travis-ci.org/metarhia/metalog)
+[![CI Status](https://github.com/metarhia/metalog/workflows/Testing%20CI/badge.svg)](https://github.com/metarhia/metalog/actions?query=workflow%3A%22Testing+CI%22+branch%3Amaster)
 [![codacy](https://api.codacy.com/project/badge/Grade/7aaad5ed17c74634855fa6202a03a56e)](https://www.codacy.com/app/metarhia/metalog)
 [![npm version](https://img.shields.io/npm/v/metalog.svg?style=flat)](https://www.npmjs.com/package/metalog)
 [![npm downloads/month](https://img.shields.io/npm/dm/metalog.svg)](https://www.npmjs.com/package/metalog)
