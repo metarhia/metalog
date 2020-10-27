@@ -81,7 +81,7 @@ class Logger extends events.EventEmitter {
     this.writeInterval = writeInterval || 3000;
     this.writeBuffer = writeBuffer || 64 * 1024;
     this.keepDays = keepDays || 0;
-    this.home = home ? new RegExp(home, 'g') : null;
+    this.home = home ? new RegExp(common.escapeRegExp(home), 'g') : null;
     this.options = { flags: 'a', bufferSize: this.writeBuffer };
     this.stream = null;
     this.reopenTimer = null;
