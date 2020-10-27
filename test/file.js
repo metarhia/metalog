@@ -4,7 +4,7 @@ const metatests = require('metatests');
 const metalog = require('..');
 
 const createLogger = () =>
-  metalog({
+  metalog.openLog({
     path: './log',
     workerId: 3,
     writeInterval: 3000,

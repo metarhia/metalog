@@ -3,7 +3,7 @@
 const metalog = require('..');
 
 (async () => {
-  const logger = await metalog({
+  const logger = await metalog.openLog({
     path: './log',
     workerId: 7,
     writeInterval: 3000,
