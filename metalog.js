@@ -288,4 +288,6 @@ class Logger extends events.EventEmitter {
   }
 }
 
-module.exports = args => new Logger(args);
+const openLog = async args => new Logger(args);
+
+module.exports = { Logger, openLog };
