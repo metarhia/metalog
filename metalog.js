@@ -59,6 +59,15 @@ const logTypes = types => {
 
 const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
+const getDateTime = () => {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const day = now.getUTCDate();
+  const date = new Date(year, month, day, 0, 0, 0, 0);
+  return date.getTime();
+};
+
 class Logger extends events.EventEmitter {
   // path <string> log directory
   // workerId <string> workwr process or thread id
@@ -102,8 +111,7 @@ class Logger extends events.EventEmitter {
       process.nextTick(() => this.emit('open'));
       return this;
     }
-    const date = common.nowDate();
-    const fileName = date + '-' + this.workerId + '.log';
+    const fileName = common.nowDate() + '-' + this.workerId + '.log';
     this.file = path.join(this.path, fileName);
     const now = new Date();
     const nextDate = new Date();
@@ -176,12 +184,7 @@ class Logger extends events.EventEmitter {
         this.emit('error', err);
         return;
       }
-      const now = new Date();
-      const year = now.getUTCFullYear();
-      const month = now.getUTCMonth();
-      const day = now.getUTCDate();
-      const date = new Date(year, month, day, 0, 0, 0, 0);
-      const time = date.getTime();
+      const time = getDateTime();
       for (const fileName of files) {
         const fileTime = new Date(fileName.substring(0, 10)).getTime();
         const fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
