@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const fsp = fs.promises;
 const path = require('path');
 const events = require('events');
 const common = require('@metarhia/common');
@@ -8,6 +9,9 @@ const { WritableFileStream } = require('metastreams');
 const concolor = require('concolor');
 
 const DAY_MILLISECONDS = common.duration('1d');
+const DEFAULT_WRITE_INTERVAL = common.duration('3s');
+const DEFAULT_BUFFER_SIZE = 64 * 1024;
+const DEFAULT_KEEP_DAYS = 1;
 
 const LOG_TYPES = [
   'system',
@@ -59,39 +63,43 @@ const logTypes = types => {
 
 const lineStack = stack => stack.replace(/[\n\r]\s*/g, '; ');
 
-const getDateTime = () => {
+const nowDays = () => {
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth();
   const day = now.getUTCDate();
   const date = new Date(year, month, day, 0, 0, 0, 0);
-  return date.getTime();
+  return Math.floor(date.getTime() / DAY_MILLISECONDS);
+};
+
+const nameToDays = fileName => {
+  const fileTime = new Date(fileName.substring(0, 10)).getTime();
+  return Math.floor(fileTime / DAY_MILLISECONDS);
 };
 
 class Logger extends events.EventEmitter {
   // path <string> log directory
   // workerId <string> workwr process or thread id
   // writeInterval <number> flush log to disk interval
-  // writeBuffer <number> buffer size 64kb
+  // writeBuffer <number> buffer size (default 64kb)
   // keepDays <number> delete files after N days, 0 to disable
   // toFile <string[]> write log types to file
   // toStdout <string[]> write log types to stdout
   // Writable <class> writable stream class
   // home <string> remove home paths from stack traces
-  constructor(options) {
+  constructor(args) {
     super();
-    const { workerId = 0, Writable = WritableFileStream } = options;
-    const { writeInterval, writeBuffer, keepDays, home } = options;
-    const { toFile, toStdout } = options;
+    const { workerId = 0, Writable = WritableFileStream } = args;
+    const { writeInterval, writeBuffer, keepDays, home } = args;
+    const { toFile, toStdout } = args;
     this.active = false;
-    this.path = options.path;
+    this.path = args.path;
     this.workerId = `W${workerId}`;
     this.Writable = Writable;
-    this.writeInterval = writeInterval || 3000;
-    this.writeBuffer = writeBuffer || 64 * 1024;
-    this.keepDays = keepDays || 0;
+    this.writeInterval = writeInterval || DEFAULT_WRITE_INTERVAL;
+    this.writeBuffer = writeBuffer || DEFAULT_BUFFER_SIZE;
+    this.keepDays = keepDays || DEFAULT_KEEP_DAYS;
     this.home = home ? new RegExp(common.escapeRegExp(home), 'g') : null;
-    this.options = { flags: 'a', bufferSize: this.writeBuffer };
     this.stream = null;
     this.reopenTimer = null;
     this.flushTimer = null;
@@ -124,7 +132,8 @@ class Logger extends events.EventEmitter {
       this.close();
     }, nextReopen);
     if (this.keepDays) this.rotate();
-    this.stream = new this.Writable(this.file, this.options);
+    const options = { flags: 'a', bufferSize: this.writeBuffer };
+    this.stream = new this.Writable(this.file, options);
     this.flushTimer = setInterval(() => {
       this.flush();
     }, this.writeInterval);
@@ -167,9 +176,9 @@ class Logger extends events.EventEmitter {
           this.emit('close');
           resolve();
           fs.stat(fileName, (err, stats) => {
-            if (err) return;
-            if (stats.size > 0) return;
-            fs.unlink(this.file, () => {});
+            if (!err && stats.size === 0) {
+              fsp.unlink(this.file);
+            }
           });
         });
       });
@@ -184,18 +193,17 @@ class Logger extends events.EventEmitter {
         this.emit('error', err);
         return;
       }
-      const time = getDateTime();
+      const now = nowDays();
       for (const fileName of files) {
-        const fileTime = new Date(fileName.substring(0, 10)).getTime();
-        const fileAge = Math.floor((time - fileTime) / DAY_MILLISECONDS);
-        if (fileAge > 1 && fileAge > this.keepDays - 1) {
-          fs.unlink(path.join(this.path, fileName), err => {
-            if (err) {
-              process.stdout.write(`${err.stack}\n`);
-              this.emit('error', err);
-            }
-          });
-        }
+        if (common.fileExt(fileName) !== 'log') continue;
+        const fileAge = now - nameToDays(fileName);
+        if (fileAge < this.keepDays) continue;
+        fs.unlink(path.join(this.path, fileName), err => {
+          if (err) {
+            process.stdout.write(`${err.stack}\n`);
+            this.emit('error', err);
+          }
+        });
       }
     });
   }
