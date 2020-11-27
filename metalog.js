@@ -131,7 +131,7 @@ class Logger extends events.EventEmitter {
       });
       this.close();
     }, nextReopen);
-    if (this.keepDays) this.rotate();
+    if (this.keepDays) await this.rotate();
     const options = { flags: 'a', bufferSize: this.writeBuffer };
     this.stream = new this.Writable(this.file, options);
     this.flushTimer = setInterval(() => {
@@ -185,27 +185,23 @@ class Logger extends events.EventEmitter {
     });
   }
 
-  rotate() {
+  async rotate() {
     if (!this.keepDays) return;
-    fs.readdir(this.path, (err, files) => {
-      if (err) {
-        process.stdout.write(`${err.stack}\n`);
-        this.emit('error', err);
-        return;
-      }
-      const now = nowDays();
+    const now = nowDays();
+    const finish = [];
+    try {
+      const files = await fsp.readdir(this.path);
       for (const fileName of files) {
         if (common.fileExt(fileName) !== 'log') continue;
         const fileAge = now - nameToDays(fileName);
         if (fileAge < this.keepDays) continue;
-        fs.unlink(path.join(this.path, fileName), err => {
-          if (err) {
-            process.stdout.write(`${err.stack}\n`);
-            this.emit('error', err);
-          }
-        });
+        finish.push(fsp.unlink(path.join(this.path, fileName)));
       }
-    });
+      await Promise.all(finish);
+    } catch (err) {
+      process.stdout.write(`${err.stack}\n`);
+      this.emit('error', err);
+    }
   }
 
   write(type, message) {
