@@ -12,17 +12,12 @@ const metalog = require('..');
     home: process.cwd(),
   });
 
+  logger.log('Regular test log message');
+  logger.info('Info test log message');
+  logger.warn('Warning test log message');
   const stack = new Error('Stack test log message').stack;
   logger.debug(stack);
-  logger.system('System test log message');
-  logger.fatal('Fatal test log message');
   logger.error('Error test log message');
-  logger.warn('Warning test log message');
-  logger.info('Info test log message');
-  logger.debug('Debug test log message');
-  logger.access('Access test log message');
-  logger.slow('Slow test log message');
-  logger.db('Database test log message');
 
   logger.close();
 })();
