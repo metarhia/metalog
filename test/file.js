@@ -17,23 +17,8 @@ const createLogger = () =>
 (async () => {
   const logger1 = await createLogger();
 
-  metatests.test('logger.system', test => {
-    logger1.system('System test log message');
-    test.end();
-  });
-
-  metatests.test('logger.fatal', test => {
-    logger1.fatal('Fatal test log message');
-    test.end();
-  });
-
-  metatests.test('logger.error', test => {
-    logger1.error('Error test log message');
-    test.end();
-  });
-
-  metatests.test('logger.warn', test => {
-    logger1.warn('Warning test log message');
+  metatests.test('logger.log', test => {
+    logger1.log('Regular test log message');
     test.end();
   });
 
@@ -42,18 +27,18 @@ const createLogger = () =>
     test.end();
   });
 
+  metatests.test('logger.warn', test => {
+    logger1.warn('Warning test log message');
+    test.end();
+  });
+
   metatests.test('logger.debug', test => {
     logger1.debug('Debug test log message');
     test.end();
   });
 
-  metatests.test('logger.slow', test => {
-    logger1.slow('Slow test log message');
-    test.end();
-  });
-
-  metatests.test('logger.db', test => {
-    logger1.db('Database test log message');
+  metatests.test('logger.error', test => {
+    logger1.error('Error test log message');
     test.end();
   });
 

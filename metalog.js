@@ -13,40 +13,22 @@ const DEFAULT_WRITE_INTERVAL = common.duration('3s');
 const DEFAULT_BUFFER_SIZE = 64 * 1024;
 const DEFAULT_KEEP_DAYS = 1;
 
-const LOG_TYPES = [
-  'system',
-  'fatal',
-  'error',
-  'warn',
-  'info',
-  'debug',
-  'access',
-  'slow',
-  'db',
-];
+const LOG_TYPES = ['error', 'warn', 'info', 'debug', 'log'];
 
 const typeColor = concolor({
-  system: 'b,white/blue',
-  fatal: 'b,yellow/red',
-  error: 'black/red',
-  warn: 'black/yellow',
-  info: 'blue/white',
-  debug: 'black/green',
-  access: 'black/white',
-  slow: 'b,yellow/blue',
-  db: 'b,white/green',
+  log: 'b,black/white',
+  info: 'b,white/blue',
+  warn: 'b,black/yellow',
+  debug: 'b,white/green',
+  error: 'b,yellow/red',
 });
 
 const textColor = concolor({
-  system: 'b,white',
-  fatal: 'b,red',
-  error: 'red',
-  warn: 'b,yellow',
+  log: 'white',
   info: 'white',
+  warn: 'b,yellow',
   debug: 'b,green',
-  access: 'white',
-  slow: 'b,blue',
-  db: 'green',
+  error: 'red',
 });
 
 // Convert array to boolean flags
@@ -257,26 +239,16 @@ class Logger extends events.EventEmitter {
     return res;
   }
 
-  system(message) {
-    this.write('system', message);
-  }
-
-  fatal(message) {
-    const msg = this.normalizeStack(message);
-    this.write('fatal', msg);
-  }
-
-  error(message) {
-    const msg = this.normalizeStack(message);
-    this.write('error', msg);
-  }
-
-  warn(message) {
-    this.write('warn', message);
+  log(message) {
+    this.write('log', message);
   }
 
   info(message) {
     this.write('info', message);
+  }
+
+  warn(message) {
+    this.write('warn', message);
   }
 
   debug(message) {
@@ -284,16 +256,9 @@ class Logger extends events.EventEmitter {
     this.write('debug', msg);
   }
 
-  access(message) {
-    this.write('access', message);
-  }
-
-  slow(message) {
-    this.write('slow', message);
-  }
-
-  db(message) {
-    this.write('db', message);
+  error(message) {
+    const msg = this.normalizeStack(message);
+    this.write('error', msg);
   }
 }
 
