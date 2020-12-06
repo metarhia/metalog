@@ -18,28 +18,76 @@ const createLogger = () =>
   const logger1 = await createLogger();
   const { console } = logger1;
 
-  metatests.test('console.log', test => {
-    console.log('Regular test log message');
+  metatests.test('console.assert', test => {
+    console.assert(false, 'Assert message: not passed');
     test.end();
   });
 
-  metatests.test('console.info', test => {
-    console.info('Info test log message');
+  metatests.test('console.count', test => {
+    console.count('count-label');
     test.end();
   });
 
-  metatests.test('console.warn', test => {
-    console.warn('Warning test log message');
+  metatests.test('console.countReset', test => {
+    console.countReset('count-label');
     test.end();
   });
 
-  metatests.test('console.debug', test => {
-    console.debug('Debug test log message');
+  metatests.test('console.debub', test => {
+    console.debug('Test log message for console.debug', 'arg2');
+    test.end();
+  });
+
+  metatests.test('console.dir', test => {
+    console.dir('Test log message for console.dir', 'arg2');
     test.end();
   });
 
   metatests.test('console.error', test => {
-    console.error('Error test log message');
+    const err = new Error('Test log message for console.error', 'arg2');
+    console.error(err);
+    test.end();
+  });
+
+  metatests.test('console.group', test => {
+    console.group('Test log message for console.group', 'arg2');
+    console.groupCollapsed('Test log message for console.group', 'arg2');
+    console.groupEnd();
+    test.end();
+  });
+
+  metatests.test('console.info', test => {
+    console.info('Test log message for console.info', 'arg2');
+    test.end();
+  });
+
+  metatests.test('console.log', test => {
+    console.log('Test log message for console.log', 'arg2');
+    test.end();
+  });
+
+  metatests.test('console.table', test => {
+    console.table([
+      { a: 1, b: 2 },
+      { a: 3, b: 4 },
+    ]);
+    test.end();
+  });
+
+  metatests.test('console.time', test => {
+    console.time('time-label');
+    console.timeEnd('time-label');
+    console.timeLog('time-label', 'Test log message for console.timeLog');
+    test.end();
+  });
+
+  metatests.test('console.trace', test => {
+    console.trace('Test log message for console.trace', 'arg2');
+    test.end();
+  });
+
+  metatests.test('console.warn', test => {
+    console.warn('Test log message for console.warn', 'arg2');
     test.end();
   });
 
