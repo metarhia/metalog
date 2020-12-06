@@ -11,13 +11,14 @@ const metalog = require('..');
     keepDays: 5,
     home: process.cwd(),
   });
+  const { console } = logger;
 
-  logger.log('Regular test log message');
-  logger.info('Info test log message');
-  logger.warn('Warning test log message');
-  const stack = new Error('Stack test log message').stack;
-  logger.debug(stack);
-  logger.error('Error test log message');
+  console.log('Regular test log message');
+  console.info('Info test log message');
+  console.warn('Warning test log message');
+  console.debug('Debug test log message');
+  const err = new Error('Error test log message');
+  console.error(err);
 
   logger.close();
 })();

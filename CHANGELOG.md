@@ -4,7 +4,8 @@
 
 To be released in 3.0.0
 
-- Change module interface
+- Change Logger interface
+- Console interface implementation
 - Support windows
 
 ## [2.x][]
