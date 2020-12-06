@@ -303,7 +303,8 @@ class Logger extends events.EventEmitter {
   write(type, s) {
     const date = new Date();
     const dateTime = date.toISOString();
-    const message = type === 'error' ? this.normalizeStack(s) : s;
+    const normalize = type === 'error' || type === 'debug';
+    const message = normalize ? this.normalizeStack(s) : s;
     if (this.toStdout[type]) {
       const normalColor = textColor[type];
       const markColor = typeColor[type];
