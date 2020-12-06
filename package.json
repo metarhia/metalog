@@ -1,6 +1,6 @@
 {
   "name": "metalog",
-  "version": "3.0.0-alpha.2",
+  "version": "3.0.0-alpha.3",
   "author": "Timur Shemsedinov <timur.shemsedinov@gmail.com>",
   "description": "Logger for Metarhia",
   "license": "MIT",
@@ -43,12 +43,12 @@
     "metastreams": "^0.1.2"
   },
   "devDependencies": {
-    "eslint": "^7.14.0",
+    "eslint": "^7.15.0",
     "eslint-config-metarhia": "^7.0.0",
-    "eslint-config-prettier": "^6.15.0",
+    "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-prettier": "^3.2.0",
     "metatests": "^0.7.2",
-    "prettier": "^2.2.0"
+    "prettier": "^2.2.1"
   }
 }
