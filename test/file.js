@@ -16,29 +16,30 @@ const createLogger = () =>
 
 (async () => {
   const logger1 = await createLogger();
+  const { console } = logger1;
 
-  metatests.test('logger.log', test => {
-    logger1.log('Regular test log message');
+  metatests.test('console.log', test => {
+    console.log('Regular test log message');
     test.end();
   });
 
-  metatests.test('logger.info', test => {
-    logger1.info('Info test log message');
+  metatests.test('console.info', test => {
+    console.info('Info test log message');
     test.end();
   });
 
-  metatests.test('logger.warn', test => {
-    logger1.warn('Warning test log message');
+  metatests.test('console.warn', test => {
+    console.warn('Warning test log message');
     test.end();
   });
 
-  metatests.test('logger.debug', test => {
-    logger1.debug('Debug test log message');
+  metatests.test('console.debug', test => {
+    console.debug('Debug test log message');
     test.end();
   });
 
-  metatests.test('logger.error', test => {
-    logger1.error('Error test log message');
+  metatests.test('console.error', test => {
+    console.error('Error test log message');
     test.end();
   });
 
@@ -51,7 +52,7 @@ const createLogger = () =>
     logger.toStdout.INFO = false;
     const begin = process.hrtime();
     for (let i = 0; i < 1000000; i++) {
-      logger.info('Write more then 60Mb logs, line: ' + i);
+      logger.console.info('Write more then 60Mb logs, line: ' + i);
     }
     logger.on('close', () => {
       const end = process.hrtime(begin);
@@ -64,14 +65,14 @@ const createLogger = () =>
 
   metatests.test('logger.close', async test => {
     const logger = await createLogger();
-    logger.info('Info log message');
+    logger.console.info('Info log message');
     await logger.close();
     test.end();
   });
 
   metatests.test('logger.close after close', async test => {
     const logger = await createLogger();
-    logger.info('Info log message');
+    logger.console.info('Info log message');
     await logger.close();
     await logger.close();
     test.end();

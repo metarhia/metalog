@@ -3,7 +3,9 @@
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
+const util = require('util');
 const events = require('events');
+const readline = require('readline');
 const common = require('@metarhia/common');
 const { WritableFileStream } = require('metastreams');
 const concolor = require('concolor');
@@ -59,6 +61,117 @@ const nameToDays = fileName => {
   return Math.floor(fileTime / DAY_MILLISECONDS);
 };
 
+class Console {
+  constructor(write) {
+    this._write = write;
+    this._groupIndent = '';
+    this._counts = new Map();
+    this._times = new Map();
+  }
+
+  assert(assertion, ...args) {
+    try {
+      console.assert(assertion, ...args);
+    } catch (err) {
+      this._write('error', `${this._groupIndent}${err.stack}`);
+    }
+  }
+
+  clear() {
+    readline.cursorTo(process.stdout, 0, 0);
+    readline.clearScreenDown(process.stdout);
+  }
+
+  count(label = 'default') {
+    let cnt = this._counts.get(label) || 0;
+    cnt++;
+    this._counts.set(label, cnt);
+    this._write('debug', `${this._groupIndent}${label}: ${cnt}`);
+  }
+
+  countReset(label = 'default') {
+    this._counts.delete(label);
+  }
+
+  debug(...args) {
+    const msg = util.format(...args);
+    this._write('debug', `${this._groupIndent}${msg}`);
+  }
+
+  dir(...args) {
+    const msg = util.inspect(...args);
+    this._write('debug', `${this._groupIndent}${msg}`);
+  }
+
+  error(...args) {
+    const msg = util.format(...args);
+    this._write('error', `${this._groupIndent}${msg}`);
+  }
+
+  group(...args) {
+    if (args.length !== 0) this.log(...args);
+    this._groupIndent = ' '.repeat(this._groupIndent.length + 2);
+  }
+
+  groupCollapsed(...args) {
+    this.group(...args);
+  }
+
+  groupEnd() {
+    if (this._groupIndent.length === 0) return;
+    this._groupIndent = ' '.repeat(this._groupIndent.length - 2);
+  }
+
+  info(...args) {
+    const msg = util.format(...args);
+    this._write('info', `${this._groupIndent}${msg}`);
+  }
+
+  log(...args) {
+    const msg = util.format(...args);
+    this._write('log', `${this._groupIndent}${msg}`);
+  }
+
+  table(tabularData) {
+    this._write('log', JSON.stringify(tabularData));
+  }
+
+  time(label = 'default') {
+    this._times.set(label, process.hrtime());
+  }
+
+  timeEnd(label = 'default') {
+    const startTime = this._times.get(label);
+    const totalTime = process.hrtime(startTime);
+    const totalTimeMs = totalTime[0] * 1e3 + totalTime[1] / 1e6;
+    const msg = `${this._groupIndent}${label}: ${totalTimeMs}ms`;
+    this.timeLog(label, msg);
+    this._times.delete(label);
+  }
+
+  timeLog(label, ...args) {
+    const startTime = this._times.get(label);
+    if (startTime === undefined) {
+      const msg = `${this._groupIndent}Warning: No such label '${label}'`;
+      this._write('warn', msg);
+      return;
+    }
+    const msg = util.format(...args);
+    this._write('debug', msg);
+  }
+
+  trace(...args) {
+    const msg = util.format(...args);
+    const err = new Error(msg);
+    this._write('debug', `${this._groupIndent}Trace${err.stack}`);
+  }
+
+  warn(...args) {
+    const msg = util.format(...args);
+    this._write('warn', `${this._groupIndent}${msg}`);
+  }
+}
+
 class Logger extends events.EventEmitter {
   // path <string> log directory
   // workerId <string> workwr process or thread id
@@ -91,6 +204,7 @@ class Logger extends events.EventEmitter {
     this.toFile = logTypes(toFile);
     this.fsEnabled = Object.keys(this.toFile).length !== 0;
     this.toStdout = logTypes(toStdout);
+    this.console = new Console((type, message) => this.write(type, message));
     return this.open();
   }
 
@@ -186,9 +300,10 @@ class Logger extends events.EventEmitter {
     }
   }
 
-  write(type, message) {
+  write(type, s) {
     const date = new Date();
     const dateTime = date.toISOString();
+    const message = type === 'error' ? this.normalizeStack(s) : s;
     if (this.toStdout[type]) {
       const normalColor = textColor[type];
       const markColor = typeColor[type];
@@ -237,28 +352,6 @@ class Logger extends events.EventEmitter {
     let res = stack.replace(/\s+at\s+/g, '\n\t');
     if (this.home) res = res.replace(this.home, '');
     return res;
-  }
-
-  log(message) {
-    this.write('log', message);
-  }
-
-  info(message) {
-    this.write('info', message);
-  }
-
-  warn(message) {
-    this.write('warn', message);
-  }
-
-  debug(message) {
-    const msg = this.normalizeStack(message);
-    this.write('debug', msg);
-  }
-
-  error(message) {
-    const msg = this.normalizeStack(message);
-    this.write('error', msg);
   }
 }
 
