@@ -4,8 +4,9 @@
 
 To be released in 3.0.0
 
-- Change Logger interface
+- Change Logger interface, use async/await
 - Console interface implementation
+- Create log folder if not exists
 - Support windows
 
 ## [2.x][]
