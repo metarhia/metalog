@@ -252,7 +252,7 @@ class Logger extends events.EventEmitter {
       process.nextTick(() => this.emit('open'));
       return this;
     }
-    await createLogDir();
+    await this.createLogDir();
     const fileName = common.nowDate() + '-' + this.workerId + '.log';
     this.file = path.join(this.path, fileName);
     const nextReopen = getNextReopen();
