@@ -75,6 +75,13 @@ const nameToDays = fileName => {
   return Math.floor(fileTime / DAY_MILLISECONDS);
 };
 
+const getNextReopen = () => {
+  const now = new Date();
+  const curTime = now.getTime();
+  const nextDate = now.setUTCHours(0, 0, 0, 0);
+  return nextDate - curTime + DAY_MILLISECONDS;
+};
+
 class Console {
   constructor(write) {
     this._write = write;
@@ -186,21 +193,6 @@ class Console {
   }
 }
 
-const createLogDir = dir =>
-  new Promise((resolve, reject) => {
-    fs.access(dir, err => {
-      if (!err) resolve();
-      fs.mkdir(dir, err => {
-        if (!err || err.code === 'EEXIST') {
-          resolve();
-          return;
-        }
-        process.stdout.write(`Can not create directory: ${dir}:${err.stack}\n`);
-        reject();
-      });
-    });
-  });
-
 class Logger extends events.EventEmitter {
   // path <string> log directory
   // workerId <string> workwr process or thread id
@@ -237,6 +229,22 @@ class Logger extends events.EventEmitter {
     return this.open();
   }
 
+  createLogDir() {
+    return new Promise((resolve, reject) => {
+      fs.access(this.path, err => {
+        if (!err) resolve();
+        fs.mkdir(this.path, err => {
+          if (!err || err.code === 'EEXIST') {
+            resolve();
+            return;
+          }
+          this.emit(new Error(`Can not create directory: ${this.path}\n`));
+          reject();
+        });
+      });
+    });
+  }
+
   async open() {
     if (this.active) return this;
     this.active = true;
@@ -244,13 +252,10 @@ class Logger extends events.EventEmitter {
       process.nextTick(() => this.emit('open'));
       return this;
     }
-    await createLogDir(this.path);
+    await createLogDir();
     const fileName = common.nowDate() + '-' + this.workerId + '.log';
     this.file = path.join(this.path, fileName);
-    const now = new Date();
-    const nextDate = new Date();
-    nextDate.setUTCHours(0, 0, 0, 0);
-    const nextReopen = nextDate - now + DAY_MILLISECONDS;
+    const nextReopen = getNextReopen();
     this.reopenTimer = setTimeout(() => {
       this.once('close', () => {
         this.open();
