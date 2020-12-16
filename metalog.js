@@ -39,7 +39,7 @@ const textColor = concolor({
 // Convert array to boolean flags
 //   types <string[]>
 // Returns: <Object>
-const logTypes = types => {
+const logTypes = (types) => {
   types = types || LOG_TYPES;
   const flags = {};
   for (const type of types) {
@@ -70,7 +70,7 @@ const nowDays = () => {
   return Math.floor(date.getTime() / DAY_MILLISECONDS);
 };
 
-const nameToDays = fileName => {
+const nameToDays = (fileName) => {
   const fileTime = new Date(fileName.substring(0, 10)).getTime();
   return Math.floor(fileTime / DAY_MILLISECONDS);
 };
@@ -231,9 +231,9 @@ class Logger extends events.EventEmitter {
 
   createLogDir() {
     return new Promise((resolve, reject) => {
-      fs.access(this.path, err => {
+      fs.access(this.path, (err) => {
         if (!err) resolve();
-        fs.mkdir(this.path, err => {
+        fs.mkdir(this.path, (err) => {
           if (!err || err.code === 'EEXIST') {
             resolve();
             return;
@@ -290,7 +290,7 @@ class Logger extends events.EventEmitter {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
-      this.flush(err => {
+      this.flush((err) => {
         if (err) {
           process.stdout.write(`${err.stack}\n`);
           this.emit('error', err);
@@ -393,6 +393,6 @@ class Logger extends events.EventEmitter {
   }
 }
 
-const openLog = async args => new Logger(args);
+const openLog = async (args) => new Logger(args);
 
 module.exports = { Logger, openLog };
