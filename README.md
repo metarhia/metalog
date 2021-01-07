@@ -21,5 +21,5 @@ $ npm install metalog
 
 ## License
 
-Copyright (c) 2017-2020 Metarhia contributors.
+Copyright (c) 2017-2021 Metarhia contributors.
 Metalog is [MIT licensed](./LICENSE).
