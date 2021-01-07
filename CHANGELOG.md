@@ -2,7 +2,13 @@
 
 ## [Unreleased][unreleased]
 
-To be released in 3.0.0
+## [3.1.0][] - 2021-01-07
+
+- Use metautil instead of metarhia/common
+- Use writable factory instead of constructor
+- Use fs.createWriteStream instead of metastreams
+
+## [3.0.0][] - 2020-12-16
 
 - Change Logger interface, use async/await
 - Console interface implementation
@@ -22,6 +28,8 @@ To be released in 3.0.0
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v2.x...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/metarhia/metalog/compare/v3.0.0...v3.1.0
+[3.0.0]: https://github.com/metarhia/metalog/compare/v2.x...v3.0.0
 [2.x]: https://github.com/metarhia/metalog/compare/v1.x...v2.x
 [1.x]: https://github.com/metarhia/metalog/tree/v1.x
