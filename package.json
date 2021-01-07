@@ -39,8 +39,7 @@
   },
   "dependencies": {
     "@metarhia/common": "^2.1.0",
-    "concolor": "^1.0.0",
-    "metastreams": "^0.1.2"
+    "concolor": "^1.0.0"
   },
   "devDependencies": {
     "eslint": "^7.15.0",

@@ -7,7 +7,6 @@ const util = require('util');
 const events = require('events');
 const readline = require('readline');
 const common = require('@metarhia/common');
-const { WritableFileStream } = require('metastreams');
 const concolor = require('concolor');
 
 const DAY_MILLISECONDS = common.duration('1d');
@@ -201,17 +200,17 @@ class Logger extends events.EventEmitter {
   // keepDays <number> delete files after N days, 0 to disable
   // toFile <string[]> write log types to file
   // toStdout <string[]> write log types to stdout
-  // Writable <class> writable stream class
+  // createStream <function> writable stream factory
   // home <string> remove home paths from stack traces
   constructor(args) {
     super();
-    const { workerId = 0, Writable = WritableFileStream } = args;
+    const { workerId = 0, createStream = fs.createWriteStream } = args;
     const { writeInterval, writeBuffer, keepDays, home } = args;
     const { toFile, toStdout } = args;
     this.active = false;
     this.path = args.path;
     this.workerId = `W${workerId}`;
-    this.Writable = Writable;
+    this.createStream = createStream;
     this.writeInterval = writeInterval || DEFAULT_WRITE_INTERVAL;
     this.writeBuffer = writeBuffer || DEFAULT_BUFFER_SIZE;
     this.keepDays = keepDays || DEFAULT_KEEP_DAYS;
@@ -264,7 +263,7 @@ class Logger extends events.EventEmitter {
     }, nextReopen);
     if (this.keepDays) await this.rotate();
     const options = { flags: 'a', bufferSize: this.writeBuffer };
-    this.stream = new this.Writable(this.file, options);
+    this.stream = this.createStream(this.file, options);
     this.flushTimer = setInterval(() => {
       this.flush();
     }, this.writeInterval);
