@@ -6,11 +6,11 @@ const path = require('path');
 const util = require('util');
 const events = require('events');
 const readline = require('readline');
-const common = require('@metarhia/common');
+const metautil = require('metautil');
 const concolor = require('concolor');
 
-const DAY_MILLISECONDS = common.duration('1d');
-const DEFAULT_WRITE_INTERVAL = common.duration('3s');
+const DAY_MILLISECONDS = metautil.duration('1d');
+const DEFAULT_WRITE_INTERVAL = metautil.duration('3s');
 const DEFAULT_BUFFER_SIZE = 64 * 1024;
 const DEFAULT_KEEP_DAYS = 1;
 const STACK_AT = '  at ';
@@ -252,7 +252,7 @@ class Logger extends events.EventEmitter {
       return this;
     }
     await this.createLogDir();
-    const fileName = common.nowDate() + '-' + this.workerId + '.log';
+    const fileName = metautil.nowDate() + '-' + this.workerId + '.log';
     this.file = path.join(this.path, fileName);
     const nextReopen = getNextReopen();
     this.reopenTimer = setTimeout(() => {
@@ -322,7 +322,7 @@ class Logger extends events.EventEmitter {
     try {
       const files = await fsp.readdir(this.path);
       for (const fileName of files) {
-        if (common.fileExt(fileName) !== 'log') continue;
+        if (metautil.fileExt(fileName) !== 'log') continue;
         const fileAge = now - nameToDays(fileName);
         if (fileAge < this.keepDays) continue;
         finish.push(fsp.unlink(path.join(this.path, fileName)));
