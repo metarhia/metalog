@@ -35,9 +35,6 @@ const textColor = concolor({
   error: 'red',
 });
 
-// Convert array to boolean flags
-//   types <string[]>
-// Returns: <Object>
 const logTypes = (types) => {
   types = types || LOG_TYPES;
   const flags = {};
@@ -180,15 +177,6 @@ class Console {
 }
 
 class Logger extends events.EventEmitter {
-  // path <string> log directory
-  // workerId <string> workwr process or thread id
-  // writeInterval <number> flush log to disk interval
-  // writeBuffer <number> buffer size (default 64kb)
-  // keepDays <number> delete files after N days, 0 to disable
-  // toFile <string[]> write log types to file
-  // toStdout <string[]> write log types to stdout
-  // createStream <function> writable stream factory
-  // home <string> remove home paths from stack traces
   constructor(args) {
     super();
     const { workerId = 0, createStream = fs.createWriteStream } = args;
