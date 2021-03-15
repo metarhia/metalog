@@ -2,6 +2,13 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.1][] - 2021-01-15
+
+- Remove code duplication: use metautil.replace
+- Remove unneeded code and comments
+- Add examples to README.md
+- Add .d.ts typings
+
 ## [3.1.0][] - 2021-01-07
 
 - Use metautil instead of metarhia/common
@@ -28,7 +35,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.0...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.1...HEAD
+[3.1.1]: https://github.com/metarhia/metalog/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/metarhia/metalog/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/metarhia/metalog/compare/v2.x...v3.0.0
 [2.x]: https://github.com/metarhia/metalog/compare/v1.x...v2.x
