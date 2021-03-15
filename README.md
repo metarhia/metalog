@@ -8,10 +8,25 @@
 [![npm downloads](https://img.shields.io/npm/dt/metalog.svg)](https://www.npmjs.com/package/metalog)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/metarhia/metalog/blob/master/LICENSE)
 
-## Installation
+## Output example
 
-```bash
-$ npm install metalog
+<img src="https://user-images.githubusercontent.com/4405297/111154959-7b99c700-859c-11eb-81bb-0f8398535106.png" width="60%"/>
+
+## Usage
+
+```js
+const logger = await metalog.openLog({
+  path: './log', // absolute or relative path
+  workerId: 7, // mark for process or thread
+  writeInterval: 3000, // flush log to disk interval
+  writeBuffer: 64 * 1024, // buffer size (default 64kb)
+  keepDays: 5, // delete after N days, 0 - disable
+  home: process.cwd(), // remove substring from paths
+});
+
+const { console } = logger;
+console.log('Test message');
+await logger.close();
 ```
 
 ## Contributors
