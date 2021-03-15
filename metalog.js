@@ -371,8 +371,6 @@ class Logger extends events.EventEmitter {
 
   normalizeStack(stack) {
     if (!stack) return 'no data to log';
-    const index = stack.indexOf(STACK_AT);
-    if (index === -1) return stack;
     let res = metautil.replace(stack, STACK_AT, '');
     if (this.home) res = metautil.replace(res, this.home, '');
     return res;
