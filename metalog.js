@@ -47,19 +47,6 @@ const logTypes = (types) => {
   return flags;
 };
 
-const replace = (str, substr, newstr) => {
-  if (substr === '') return str;
-  let src = str;
-  let res = '';
-  do {
-    const index = src.indexOf(substr);
-    if (index === -1) return res + src;
-    const start = src.substring(0, index);
-    src = src.substring(index + substr.length, src.length);
-    res += start + newstr;
-  } while (true);
-};
-
 const nowDays = () => {
   const now = new Date();
   const year = now.getUTCFullYear();
@@ -350,7 +337,7 @@ class Logger extends events.EventEmitter {
       process.stdout.write(line);
     }
     if (this.toFile[type]) {
-      const msg = replace(message, '\n', LINE_SEPARATOR);
+      const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
       const line = `${dateTime} [${type}] ${msg}\n`;
       const buffer = Buffer.from(line);
       this.buffer.push(buffer);
@@ -386,8 +373,8 @@ class Logger extends events.EventEmitter {
     if (!stack) return 'no data to log';
     const index = stack.indexOf(STACK_AT);
     if (index === -1) return stack;
-    let res = replace(stack, STACK_AT, '');
-    if (this.home) res = replace(res, this.home, '');
+    let res = metautil.replace(stack, STACK_AT, '');
+    if (this.home) res = metautil.replace(res, this.home, '');
     return res;
   }
 }
