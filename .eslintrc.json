@@ -1,4 +1,7 @@
 {
   "extends": ["metarhia", "plugin:prettier/recommended"],
-  "parserOptions": { "ecmaVersion": 2020 }
+  "parserOptions": { "ecmaVersion": 2020 },
+  "rules": {
+    "arrow-parens": ["error", "always"]
+  }
 }
