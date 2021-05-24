@@ -2,6 +2,10 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.2][] - 2021-05-24
+
+- Package maintenance
+
 ## [3.1.1][] - 2021-01-15
 
 - Remove code duplication: use metautil.replace
@@ -35,7 +39,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.1...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.2...HEAD
+[3.1.2]: https://github.com/metarhia/metalog/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/metarhia/metalog/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/metarhia/metalog/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/metarhia/metalog/compare/v2.x...v3.0.0
