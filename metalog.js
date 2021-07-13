@@ -16,10 +16,14 @@ const DEFAULT_KEEP_DAYS = 1;
 const STACK_AT = '  at ';
 const TYPE_LENGTH = 6;
 const LINE_SEPARATOR = ';';
+const INDENT = 2;
+const DATE_LEN = 'YYYY-MM-DD'.length;
+const TIME_START = DATE_LEN + 1;
+const TIME_END = TIME_START + 'HH:MM:SS'.length;
 
-const LOG_TYPES = ['error', 'warn', 'info', 'debug', 'log'];
+const LOG_TYPES = ['log', 'info', 'warn', 'debug', 'error'];
 
-const typeColor = concolor({
+const TYPE_COLOR = concolor({
   log: 'b,black/white',
   info: 'b,white/blue',
   warn: 'b,black/yellow',
@@ -27,7 +31,7 @@ const typeColor = concolor({
   error: 'b,yellow/red',
 });
 
-const textColor = concolor({
+const TEXT_COLOR = concolor({
   log: 'white',
   info: 'white',
   warn: 'b,yellow',
@@ -35,9 +39,16 @@ const textColor = concolor({
   error: 'red',
 });
 
-const logTypes = (types) => {
-  types = types || LOG_TYPES;
-  const flags = {};
+const DEFAULT_FLAGS = {
+  log: false,
+  info: false,
+  warn: false,
+  debug: false,
+  error: false,
+};
+
+const logTypes = (types = LOG_TYPES) => {
+  const flags = { ...DEFAULT_FLAGS };
   for (const type of types) {
     flags[type] = true;
   }
@@ -54,7 +65,8 @@ const nowDays = () => {
 };
 
 const nameToDays = (fileName) => {
-  const fileTime = new Date(fileName.substring(0, 10)).getTime();
+  const date = fileName.substring(0, DATE_LEN);
+  const fileTime = new Date(date).getTime();
   return Math.floor(fileTime / DAY_MILLISECONDS);
 };
 
@@ -114,7 +126,7 @@ class Console {
 
   group(...args) {
     if (args.length !== 0) this.log(...args);
-    this._groupIndent = ' '.repeat(this._groupIndent.length + 2);
+    this._groupIndent = ' '.repeat(this._groupIndent.length + INDENT);
   }
 
   groupCollapsed(...args) {
@@ -123,7 +135,7 @@ class Console {
 
   groupEnd() {
     if (this._groupIndent.length === 0) return;
-    this._groupIndent = ' '.repeat(this._groupIndent.length - 2);
+    this._groupIndent = ' '.repeat(this._groupIndent.length - INDENT);
   }
 
   info(...args) {
@@ -315,9 +327,9 @@ class Logger extends events.EventEmitter {
     const normalize = type === 'error' || type === 'debug';
     const message = normalize ? this.normalizeStack(s) : s;
     if (this.toStdout[type]) {
-      const normalColor = textColor[type];
-      const markColor = typeColor[type];
-      const time = normalColor(dateTime.substring(11, 19));
+      const normalColor = TEXT_COLOR[type];
+      const markColor = TYPE_COLOR[type];
+      const time = normalColor(dateTime.substring(TIME_START, TIME_END));
       const id = normalColor(this.workerId);
       const mark = markColor(' ' + type.padEnd(TYPE_LENGTH));
       const msg = normalColor(message);
