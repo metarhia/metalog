@@ -2,6 +2,8 @@
 
 ## [Unreleased][unreleased]
 
+- Improve code style
+
 ## [3.1.2][] - 2021-05-24
 
 - Package maintenance
