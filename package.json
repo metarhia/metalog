@@ -36,14 +36,15 @@
     "url": "https://www.patreon.com/tshemsedinov"
   },
   "main": "metalog.js",
-  "types": "types/metalog.d.ts",
+  "types": "metalog.d.ts",
   "readmeFilename": "README.md",
   "files": [
-    "types/"
+    "types/",
+    "metalog.d.ts"
   ],
   "scripts": {
     "test": "npm run lint && npm run types && metatests test/",
-    "types": "tsc -p types/tsconfig.json",
+    "types": "tsc -p tsconfig.json",
     "lint": "eslint . && prettier --check \"**/*.js\" \"**/*.json\" \"**/*.md\" \"**/.*rc\" \"**/*.ts\"",
     "fmt": "prettier --write \"**/*.js\" \"**/*.json\" \"**/*.md\" \"**/.*rc\" \"**/*.ts\""
   },
