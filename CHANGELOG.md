@@ -3,6 +3,7 @@
 ## [Unreleased][unreleased]
 
 - Improve code style
+- Move types to package root
 
 ## [3.1.2][] - 2021-05-24
 
