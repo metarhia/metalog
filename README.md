@@ -29,12 +29,8 @@ console.log('Test message');
 await logger.close();
 ```
 
-## Contributors
+## License & Contributors
 
-- Timur Shemsedinov <timur.shemsedinov@gmail.com>
-- See github for full [contributors list](https://github.com/metarhia/metalog/graphs/contributors)
-
-## License
-
-Copyright (c) 2017-2021 Metarhia contributors.
-Metalog is [MIT licensed](./LICENSE).
+Copyright (c) 2017-2021 [Metarhia contributors](https://github.com/metarhia/metalog/graphs/contributors).
+Metalog is [MIT licensed](./LICENSE).\
+Metalog is a part of [Metarhia](https://github.com/metarhia) technology stack.
