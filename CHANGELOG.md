@@ -2,6 +2,10 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.5][] - 2021-10-11
+
+- Update dependencies and npm audit fix
+
 ## [3.1.4][] - 2021-09-10
 
 - Update dependencies
@@ -48,7 +52,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.4...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.5...HEAD
+[3.1.5]: https://github.com/metarhia/metalog/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/metarhia/metalog/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/metarhia/metalog/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/metarhia/metalog/compare/v3.1.1...v3.1.2
