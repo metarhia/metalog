@@ -20,7 +20,7 @@ const metalog = require('..');
   console.countReset('count-label');
   console.debug('Test log message for console.debug', 'arg2');
   console.dir('Test log message for console.dir', 'arg2');
-  const err = new Error('Test log message for console.error', 'arg2');
+  const err = new Error('Test log message for console.error');
   console.error(err);
   console.group('Test log message for console.group', 'arg2');
   console.groupCollapsed('Test log message for console.group', 'arg2');

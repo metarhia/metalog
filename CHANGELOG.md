@@ -3,6 +3,7 @@
 ## [Unreleased][unreleased]
 
 - Fix typings
+- Remove useless code from tests
 
 ## [3.1.5][] - 2021-10-11
 
