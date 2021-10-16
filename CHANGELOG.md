@@ -2,6 +2,8 @@
 
 ## [Unreleased][unreleased]
 
+- Fix typings
+
 ## [3.1.5][] - 2021-10-11
 
 - Update dependencies and npm audit fix
