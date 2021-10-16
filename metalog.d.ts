@@ -3,13 +3,13 @@ import EventEmitter = require('events');
 interface LoggerOptions {
   path: string;
   home: string;
-  workerId: number;
-  createStream: () => NodeJS.WritableStream;
+  workerId?: number;
+  createStream?: () => NodeJS.WritableStream;
   writeInterval: number;
   writeBuffer: number;
   keepDays: number;
-  toFile: Array<string>;
-  toStdout: Array<string>;
+  toFile?: Array<string>;
+  toStdout?: Array<string>;
 }
 
 export class Logger extends EventEmitter {
@@ -27,9 +27,9 @@ export class Logger extends EventEmitter {
   lock: boolean;
   buffer: Array<Buffer>;
   file: string;
-  toFile: Array<string>;
+  toFile: Record<string, boolean>;
   fsEnabled: boolean;
-  toStdout: Array<string>;
+  toStdout: Record<string, boolean>;
   console: Console;
   constructor(args: LoggerOptions);
   createLogDir(): Promise<void>;
