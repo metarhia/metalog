@@ -44,7 +44,7 @@ const createLogger = () =>
   });
 
   metatests.test('console.error', (test) => {
-    const err = new Error('Test log message for console.error', 'arg2');
+    const err = new Error('Test log message for console.error');
     console.error(err);
     test.end();
   });
