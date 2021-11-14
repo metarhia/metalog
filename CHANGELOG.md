@@ -4,6 +4,7 @@
 
 - Fix typings
 - Remove useless code from tests
+- Fix unlink file bug
 
 ## [3.1.5][] - 2021-10-11
 
