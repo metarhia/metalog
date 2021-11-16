@@ -294,7 +294,7 @@ class Logger extends events.EventEmitter {
           resolve();
           fs.stat(fileName, (err, stats) => {
             if (!err && stats.size === 0) {
-              fsp.unlink(fileName);
+              fsp.unlink(fileName).catch(reject);
             }
           });
         });
