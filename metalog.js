@@ -224,7 +224,8 @@ class Logger extends events.EventEmitter {
             resolve();
             return;
           }
-          this.emit(new Error(`Can not create directory: ${this.path}\n`));
+          const error = new Error(`Can not create directory: ${this.path}\n`);
+          this.emit('error', error);
           reject();
         });
       });
@@ -246,7 +247,10 @@ class Logger extends events.EventEmitter {
       this.once('close', () => {
         this.open();
       });
-      this.close();
+      this.close().catch((err) => {
+        process.stdout.write(`${err.stack}\n`);
+        this.emit('error', err);
+      });
     }, nextReopen);
     if (this.keepDays) await this.rotate();
     const options = { flags: 'a', bufferSize: this.writeBuffer };
@@ -278,8 +282,6 @@ class Logger extends events.EventEmitter {
     return new Promise((resolve, reject) => {
       this.flush((err) => {
         if (err) {
-          process.stdout.write(`${err.stack}\n`);
-          this.emit('error', err);
           reject(err);
           return;
         }
@@ -291,11 +293,11 @@ class Logger extends events.EventEmitter {
           this.reopenTimer = null;
           const fileName = this.file;
           this.emit('close');
-          resolve();
           fs.stat(fileName, (err, stats) => {
             if (!err && stats.size === 0) {
-              fsp.unlink(this.file);
+              fsp.unlink(fileName).then(resolve).catch(reject);
             }
+            reject(err);
           });
         });
       });
