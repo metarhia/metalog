@@ -2,6 +2,8 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.6][] - 2021-12-08
+
 - Fix typings
 - Remove useless code from tests
 - Fix unlink file bug
@@ -56,7 +58,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.5...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.6...HEAD
+[3.1.6]: https://github.com/metarhia/metalog/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/metarhia/metalog/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/metarhia/metalog/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/metarhia/metalog/compare/v3.1.2...v3.1.3
