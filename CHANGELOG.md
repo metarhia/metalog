@@ -2,6 +2,12 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.7][] - 2022-03-17
+
+- Fix unlink empty files
+- Improve error handling
+- Update dependencies and package maintenance
+
 ## [3.1.6][] - 2021-12-08
 
 - Fix typings
@@ -58,7 +64,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.6...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.7...HEAD
+[3.1.7]: https://github.com/metarhia/metalog/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/metarhia/metalog/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/metarhia/metalog/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/metarhia/metalog/compare/v3.1.3...v3.1.4
