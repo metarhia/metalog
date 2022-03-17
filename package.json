@@ -49,7 +49,7 @@
     "fmt": "prettier --write \"**/*.js\" \"**/*.json\" \"**/*.md\" \"**/.*rc\" \"**/*.ts\""
   },
   "engines": {
-    "node": "^12.10 || 14 || 16"
+    "node": "^12.10 || 14 || 16 || 17"
   },
   "dependencies": {
     "concolor": "^1.0.2",
