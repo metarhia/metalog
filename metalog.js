@@ -294,10 +294,8 @@ class Logger extends events.EventEmitter {
           const fileName = this.file;
           this.emit('close');
           fs.stat(fileName, (err, stats) => {
-            if (err) return;
-            if (stats.size && stats.size === 0) {
-              fsp.unlink(fileName).then(resolve).catch(reject);
-              return;
+            if (!err && stats.size && stats.size === 0) {
+              fsp.unlink(fileName).catch(() => {});
             }
             resolve();
           });
