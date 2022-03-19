@@ -77,10 +77,13 @@ const getNextReopen = () => {
   return nextDate - curTime + DAY_MILLISECONDS;
 };
 
+const isError = (val) =>
+  Object.prototype.toString.call(val) === '[object Error]';
+
 class Console {
   constructor(write) {
     this._write = write;
-    this._groupIndent = '';
+    this._groupIndent = 0;
     this._counts = new Map();
     this._times = new Map();
   }
@@ -89,7 +92,7 @@ class Console {
     try {
       console.assert(assertion, ...args);
     } catch (err) {
-      this._write('error', `${this._groupIndent}${err.stack}`);
+      this._write('error', this._groupIndent, err.stack);
     }
   }
 
@@ -102,7 +105,7 @@ class Console {
     let cnt = this._counts.get(label) || 0;
     cnt++;
     this._counts.set(label, cnt);
-    this._write('debug', `${this._groupIndent}${label}: ${cnt}`);
+    this._write('debug', this._groupIndent, `${label}: ${cnt}`);
   }
 
   countReset(label = 'default') {
@@ -110,23 +113,38 @@ class Console {
   }
 
   debug(...args) {
-    const msg = util.format(...args);
-    this._write('debug', `${this._groupIndent}${msg}`);
+    this._write('debug', this._groupIndent, ...args);
   }
 
   dir(...args) {
-    const msg = util.inspect(...args);
-    this._write('debug', `${this._groupIndent}${msg}`);
+    this._write('debug', this._groupIndent, ...args);
+  }
+
+  trace(...args) {
+    const msg = util.format(...args);
+    const err = new Error(msg);
+    this._write('debug', this._groupIndent, `Trace${err.stack}`);
+  }
+
+  info(...args) {
+    this._write('info', this._groupIndent, ...args);
+  }
+
+  log(...args) {
+    this._write('log', this._groupIndent, ...args);
+  }
+
+  warn(...args) {
+    this._write('warn', this._groupIndent, ...args);
   }
 
   error(...args) {
-    const msg = util.format(...args);
-    this._write('error', `${this._groupIndent}${msg}`);
+    this._write('error', this._groupIndent, ...args);
   }
 
   group(...args) {
     if (args.length !== 0) this.log(...args);
-    this._groupIndent = ' '.repeat(this._groupIndent.length + INDENT);
+    this._groupIndent += INDENT;
   }
 
   groupCollapsed(...args) {
@@ -135,21 +153,11 @@ class Console {
 
   groupEnd() {
     if (this._groupIndent.length === 0) return;
-    this._groupIndent = ' '.repeat(this._groupIndent.length - INDENT);
-  }
-
-  info(...args) {
-    const msg = util.format(...args);
-    this._write('info', `${this._groupIndent}${msg}`);
-  }
-
-  log(...args) {
-    const msg = util.format(...args);
-    this._write('log', `${this._groupIndent}${msg}`);
+    this._groupIndent -= INDENT;
   }
 
   table(tabularData) {
-    this._write('log', JSON.stringify(tabularData));
+    this._write('log', 0, JSON.stringify(tabularData));
   }
 
   time(label = 'default') {
@@ -160,31 +168,18 @@ class Console {
     const startTime = this._times.get(label);
     const totalTime = process.hrtime(startTime);
     const totalTimeMs = totalTime[0] * 1e3 + totalTime[1] / 1e6;
-    const msg = `${this._groupIndent}${label}: ${totalTimeMs}ms`;
-    this.timeLog(label, msg);
+    this.timeLog(label, `${label}: ${totalTimeMs}ms`);
     this._times.delete(label);
   }
 
   timeLog(label, ...args) {
     const startTime = this._times.get(label);
     if (startTime === undefined) {
-      const msg = `${this._groupIndent}Warning: No such label '${label}'`;
-      this._write('warn', msg);
+      const msg = `Warning: No such label '${label}'`;
+      this._write('warn', this._groupIndent, msg);
       return;
     }
-    const msg = util.format(...args);
-    this._write('debug', msg);
-  }
-
-  trace(...args) {
-    const msg = util.format(...args);
-    const err = new Error(msg);
-    this._write('debug', `${this._groupIndent}Trace${err.stack}`);
-  }
-
-  warn(...args) {
-    const msg = util.format(...args);
-    this._write('warn', `${this._groupIndent}${msg}`);
+    this._write('debug', this._groupIndent, ...args);
   }
 }
 
@@ -192,7 +187,7 @@ class Logger extends events.EventEmitter {
   constructor(args) {
     super();
     const { workerId = 0, createStream = fs.createWriteStream } = args;
-    const { writeInterval, writeBuffer, keepDays, home } = args;
+    const { writeInterval, writeBuffer, keepDays, home, json } = args;
     const { toFile, toStdout } = args;
     this.active = false;
     this.path = args.path;
@@ -202,6 +197,7 @@ class Logger extends events.EventEmitter {
     this.writeBuffer = writeBuffer || DEFAULT_BUFFER_SIZE;
     this.keepDays = keepDays || DEFAULT_KEEP_DAYS;
     this.home = home;
+    this.json = Boolean(json);
     this.stream = null;
     this.reopenTimer = null;
     this.flushTimer = null;
@@ -211,7 +207,7 @@ class Logger extends events.EventEmitter {
     this.toFile = logTypes(toFile);
     this.fsEnabled = Object.keys(this.toFile).length !== 0;
     this.toStdout = logTypes(toStdout);
-    this.console = new Console((type, message) => this.write(type, message));
+    this.console = new Console((...args) => this.write(...args));
     return this.open();
   }
 
@@ -323,25 +319,63 @@ class Logger extends events.EventEmitter {
     }
   }
 
-  write(type, s) {
-    const date = new Date();
-    const dateTime = date.toISOString();
+  format(type, indent, ...args) {
     const normalize = type === 'error' || type === 'debug';
-    const message = normalize ? this.normalizeStack(s) : s;
+    const s = `${' '.repeat(indent)}${util.format(...args)}`;
+    return normalize ? this.normalizeStack(s) : s;
+  }
+
+  formatPretty(type, indent, ...args) {
+    const dateTime = new Date().toISOString();
+    const message = this.format(type, indent, ...args);
+    const normalColor = TEXT_COLOR[type];
+    const markColor = TYPE_COLOR[type];
+    const time = normalColor(dateTime.substring(TIME_START, TIME_END));
+    const id = normalColor(this.workerId);
+    const mark = markColor(' ' + type.padEnd(TYPE_LENGTH));
+    const msg = normalColor(message);
+    return `${time}  ${id}  ${mark}  ${msg}`;
+  }
+
+  formatFile(type, indent, ...args) {
+    const dateTime = new Date().toISOString();
+    const message = this.format(type, indent, ...args);
+    const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
+    return `${dateTime} [${type}] ${msg}`;
+  }
+
+  formatJson(type, indent, ...args) {
+    const log = {
+      timestamp: new Date().toISOString(),
+      workerId: this.workerId,
+      level: type,
+      message: null,
+    };
+    if (isError(args[0])) {
+      log.err = this.expandError(args[0]);
+      args = args.slice(1);
+    } else if (typeof args[0] === 'object') {
+      Object.assign(log, args[0]);
+      if (isError(log.err)) log.err = this.expandError(log.err);
+      if (isError(log.error)) log.error = this.expandError(log.error);
+      args = args.slice(1);
+    }
+    log.message = util.format(...args);
+    return `${log.timestamp} ${JSON.stringify(log)}`;
+  }
+
+  write(type, indent, ...args) {
     if (this.toStdout[type]) {
-      const normalColor = TEXT_COLOR[type];
-      const markColor = TYPE_COLOR[type];
-      const time = normalColor(dateTime.substring(TIME_START, TIME_END));
-      const id = normalColor(this.workerId);
-      const mark = markColor(' ' + type.padEnd(TYPE_LENGTH));
-      const msg = normalColor(message);
-      const line = `${time}  ${id}  ${mark}  ${msg}\n`;
-      process.stdout.write(line);
+      const line = this.json
+        ? this.formatJson(type, indent, ...args)
+        : this.formatPretty(type, indent, ...args);
+      process.stdout.write(line + '\n');
     }
     if (this.toFile[type]) {
-      const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
-      const line = `${dateTime} [${type}] ${msg}\n`;
-      const buffer = Buffer.from(line);
+      const line = this.json
+        ? this.formatJson(type, indent, ...args)
+        : this.formatFile(type, indent, ...args);
+      const buffer = Buffer.from(line + '\n');
       this.buffer.push(buffer);
     }
   }
@@ -376,6 +410,14 @@ class Logger extends events.EventEmitter {
     let res = metautil.replace(stack, STACK_AT, '');
     if (this.home) res = metautil.replace(res, this.home, '');
     return res;
+  }
+
+  expandError(err) {
+    return {
+      message: err.message,
+      stack: this.normalizeStack(err.stack),
+      ...err,
+    };
   }
 }
 
