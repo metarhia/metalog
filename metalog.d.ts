@@ -8,6 +8,7 @@ interface LoggerOptions {
   writeInterval: number;
   writeBuffer: number;
   keepDays: number;
+  json?: boolean;
   toFile?: Array<string>;
   toStdout?: Array<string>;
 }

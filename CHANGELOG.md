@@ -2,6 +2,8 @@
 
 ## [Unreleased][unreleased]
 
+- Add support for json-only logs
+
 ## [3.1.7][] - 2022-03-17
 
 - Fix unlink empty files
