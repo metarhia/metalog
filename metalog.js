@@ -82,17 +82,17 @@ const isError = (val) =>
 
 class Console {
   constructor(write) {
-    this._write = write;
     this._groupIndent = 0;
     this._counts = new Map();
     this._times = new Map();
+    this._write = (type, ...args) => write(type, this._groupIndent, ...args);
   }
 
   assert(assertion, ...args) {
     try {
       console.assert(assertion, ...args);
     } catch (err) {
-      this._write('error', this._groupIndent, err.stack);
+      this._write('error', err.stack);
     }
   }
 
@@ -105,7 +105,7 @@ class Console {
     let cnt = this._counts.get(label) || 0;
     cnt++;
     this._counts.set(label, cnt);
-    this._write('debug', this._groupIndent, `${label}: ${cnt}`);
+    this._write('debug', `${label}: ${cnt}`);
   }
 
   countReset(label = 'default') {
@@ -113,33 +113,33 @@ class Console {
   }
 
   debug(...args) {
-    this._write('debug', this._groupIndent, ...args);
+    this._write('debug', ...args);
   }
 
   dir(...args) {
-    this._write('debug', this._groupIndent, ...args);
+    this._write('debug', ...args);
   }
 
   trace(...args) {
     const msg = util.format(...args);
     const err = new Error(msg);
-    this._write('debug', this._groupIndent, `Trace${err.stack}`);
+    this._write('debug', `Trace${err.stack}`);
   }
 
   info(...args) {
-    this._write('info', this._groupIndent, ...args);
+    this._write('info', ...args);
   }
 
   log(...args) {
-    this._write('log', this._groupIndent, ...args);
+    this._write('log', ...args);
   }
 
   warn(...args) {
-    this._write('warn', this._groupIndent, ...args);
+    this._write('warn', ...args);
   }
 
   error(...args) {
-    this._write('error', this._groupIndent, ...args);
+    this._write('error', ...args);
   }
 
   group(...args) {
@@ -157,7 +157,7 @@ class Console {
   }
 
   table(tabularData) {
-    this._write('log', 0, JSON.stringify(tabularData));
+    this._write('log', JSON.stringify(tabularData));
   }
 
   time(label = 'default') {
@@ -176,10 +176,10 @@ class Console {
     const startTime = this._times.get(label);
     if (startTime === undefined) {
       const msg = `Warning: No such label '${label}'`;
-      this._write('warn', this._groupIndent, msg);
+      this._write('warn', msg);
       return;
     }
-    this._write('debug', this._groupIndent, ...args);
+    this._write('debug', ...args);
   }
 }
 
@@ -346,9 +346,9 @@ class Logger extends events.EventEmitter {
 
   formatJson(type, indent, ...args) {
     const log = {
+      type,
       timestamp: new Date().toISOString(),
       workerId: this.workerId,
-      level: type,
       message: null,
     };
     if (isError(args[0])) {

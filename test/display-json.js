@@ -37,6 +37,11 @@ const metalog = require('..');
   console.timeLog('time-label', 'Test log message for console.timeLog');
   console.trace('Test log message for console.trace', 'arg2');
   console.warn('Test log message for console.warn', 'arg2');
+  console.log({ data: { a: 42 }, kind: 'abc' }, 'message');
+  console.error(
+    { err: new Error('failed'), data: { f: 42 }, kind: 'ccc' },
+    'message'
+  );
 
   logger.close();
 })();
