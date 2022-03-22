@@ -361,7 +361,7 @@ class Logger extends events.EventEmitter {
       args = args.slice(1);
     }
     log.message = util.format(...args);
-    return `${log.timestamp} ${JSON.stringify(log)}`;
+    return JSON.stringify(log);
   }
 
   write(type, indent, ...args) {
