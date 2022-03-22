@@ -21,6 +21,7 @@ const logger = await metalog.openLog({
   writeBuffer: 64 * 1024, // buffer size (default 64kb)
   keepDays: 5, // delete after N days, 0 - disable
   home: process.cwd(), // remove substring from paths
+  json: false, // print logs in JSON format, by default false
 });
 
 const { console } = logger;
