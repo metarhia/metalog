@@ -3,6 +3,7 @@
 ## [Unreleased][unreleased]
 
 - Add support for json-only logs
+- Fetch buffer to file on process crash
 
 ## [3.1.7][] - 2022-03-17
 

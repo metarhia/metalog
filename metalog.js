@@ -208,6 +208,7 @@ class Logger extends events.EventEmitter {
     this.fsEnabled = Object.keys(this.toFile).length !== 0;
     this.toStdout = logTypes(toStdout);
     this.console = new Console((...args) => this.write(...args));
+    this.handleProcessCrash();
     return this.open();
   }
 
@@ -418,6 +419,25 @@ class Logger extends events.EventEmitter {
       stack: this.normalizeStack(err.stack),
       ...err,
     };
+  }
+
+  handleProcessCrash() {
+    process.on('uncaughtException', async () => {
+      await this.close();
+      process.exit(1);
+    });
+    process.on('unhandledRejection', async () => {
+      await this.close();
+      process.exit(1);
+    });
+    process.on('SIGTERM', async () => {
+      await this.close();
+      process.exit(0);
+    });
+    process.on('SIGINT', async () => {
+      await this.close();
+      process.exit(0);
+    });
   }
 }
 
