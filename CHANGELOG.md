@@ -2,6 +2,8 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.8][] - 2022-03-30
+
 - Add support for json-only logs
 
 ## [3.1.7][] - 2022-03-17
@@ -66,7 +68,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.7...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.8...HEAD
+[3.1.8]: https://github.com/metarhia/metalog/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/metarhia/metalog/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/metarhia/metalog/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/metarhia/metalog/compare/v3.1.4...v3.1.5
