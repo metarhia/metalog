@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "concolor": "^1.0.2",
-    "metautil": "^3.5.19"
+    "metautil": "^3.5.20"
   },
   "devDependencies": {
     "@types/node": "^17.0.21",
