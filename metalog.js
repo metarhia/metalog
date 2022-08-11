@@ -21,10 +21,11 @@ const DATE_LEN = 'YYYY-MM-DD'.length;
 const TIME_START = DATE_LEN + 1;
 const TIME_END = TIME_START + 'HH:MM:SS'.length;
 
-const LOG_TYPES = ['log', 'info', 'warn', 'debug', 'error'];
+const LOG_TYPES = ['log', 'groupLog', 'info', 'warn', 'debug', 'error'];
 
 const TYPE_COLOR = concolor({
   log: 'b,black/white',
+  groupLog: 'b,black/white',
   info: 'b,white/blue',
   warn: 'b,black/yellow',
   debug: 'b,white/green',
@@ -33,6 +34,7 @@ const TYPE_COLOR = concolor({
 
 const TEXT_COLOR = concolor({
   log: 'white',
+  groupLog: 'white',
   info: 'white',
   warn: 'b,yellow',
   debug: 'b,green',
@@ -41,6 +43,7 @@ const TEXT_COLOR = concolor({
 
 const DEFAULT_FLAGS = {
   log: false,
+  groupLog: false,
   info: false,
   warn: false,
   debug: false,
@@ -88,9 +91,9 @@ class Console {
     this._times = new Map();
   }
 
-  assert(assertion, ...args) {
+  assert(assertion, message) {
     try {
-      console.assert(assertion, ...args);
+      console.assert(assertion, message);
     } catch (err) {
       this._write('error', this._groupIndent, err.stack);
     }
@@ -112,43 +115,47 @@ class Console {
     this._counts.delete(label);
   }
 
-  debug(...args) {
-    this._write('debug', this._groupIndent, ...args);
+  debug(message) {
+    this._write('debug', this._groupIndent, message);
   }
 
-  dir(...args) {
-    this._write('debug', this._groupIndent, ...args);
+  dir(message) {
+    this._write('debug', this._groupIndent, message);
   }
 
-  trace(...args) {
-    const msg = util.format(...args);
+  trace(message) {
+    const msg = util.format(message);
     const err = new Error(msg);
     this._write('debug', this._groupIndent, `Trace${err.stack}`);
   }
 
-  info(...args) {
-    this._write('info', this._groupIndent, ...args);
+  info(message) {
+    this._write('info', this._groupIndent, message);
   }
 
-  log(...args) {
-    this._write('log', this._groupIndent, ...args);
+  log(message) {
+    this._write('log', this._groupIndent, message);
   }
 
-  warn(...args) {
-    this._write('warn', this._groupIndent, ...args);
+  groupLog(message, group = 'system') {
+    this._write('groupLog', this._groupIndent, { message, group });
   }
 
-  error(...args) {
-    this._write('error', this._groupIndent, ...args);
+  warn(message) {
+    this._write('warn', this._groupIndent, message);
   }
 
-  group(...args) {
-    if (args.length !== 0) this.log(...args);
+  error(message) {
+    this._write('error', this._groupIndent, message);
+  }
+
+  group(message) {
+    if (message) this.log(message);
     this._groupIndent += INDENT;
   }
 
-  groupCollapsed(...args) {
-    this.group(...args);
+  groupCollapsed(message) {
+    this.group(message);
   }
 
   groupEnd() {
@@ -172,14 +179,14 @@ class Console {
     this._times.delete(label);
   }
 
-  timeLog(label, ...args) {
+  timeLog(label, message) {
     const startTime = this._times.get(label);
     if (startTime === undefined) {
       const msg = `Warning: No such label '${label}'`;
       this._write('warn', this._groupIndent, msg);
       return;
     }
-    this._write('debug', this._groupIndent, ...args);
+    this._write('debug', this._groupIndent, message);
   }
 }
 
@@ -319,62 +326,60 @@ class Logger extends events.EventEmitter {
     }
   }
 
-  format(type, indent, ...args) {
+  format(type, indent, message) {
     const normalize = type === 'error' || type === 'debug';
-    const s = `${' '.repeat(indent)}${util.format(...args)}`;
+    const s = `${' '.repeat(indent)}${util.format(message)}`;
     return normalize ? this.normalizeStack(s) : s;
   }
 
-  formatPretty(type, indent, ...args) {
+  formatPretty(type, indent, message) {
     const dateTime = new Date().toISOString();
-    const message = this.format(type, indent, ...args);
+    const formattedMsg = this.format(type, indent, message);
     const normalColor = TEXT_COLOR[type];
     const markColor = TYPE_COLOR[type];
     const time = normalColor(dateTime.substring(TIME_START, TIME_END));
     const id = normalColor(this.workerId);
     const mark = markColor(' ' + type.padEnd(TYPE_LENGTH));
-    const msg = normalColor(message);
-    return `${time}  ${id}  ${mark}  ${msg}`;
+    const normalizedMsg = normalColor(formattedMsg);
+    return `${time}  ${id}  ${mark}  ${normalizedMsg}`;
   }
 
-  formatFile(type, indent, ...args) {
+  formatFile(type, indent, message) {
     const dateTime = new Date().toISOString();
-    const message = this.format(type, indent, ...args);
-    const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
-    return `${dateTime} [${type}] ${msg}`;
+    const formattedMsg = this.format(type, indent, message);
+    const normalizedMsg = metautil.replace(formattedMsg, '\n', LINE_SEPARATOR);
+    return `${dateTime} [${type}] ${normalizedMsg}`;
   }
 
-  formatJson(type, indent, ...args) {
+  formatJson(type, indent, message) {
     const log = {
       timestamp: new Date().toISOString(),
       workerId: this.workerId,
       level: type,
       message: null,
     };
-    if (isError(args[0])) {
-      log.err = this.expandError(args[0]);
-      args = args.slice(1);
-    } else if (typeof args[0] === 'object') {
-      Object.assign(log, args[0]);
+    if (isError(message)) {
+      log.err = this.expandError(message);
+    } else if (typeof message === 'object') {
+      Object.assign(log, message);
       if (isError(log.err)) log.err = this.expandError(log.err);
       if (isError(log.error)) log.error = this.expandError(log.error);
-      args = args.slice(1);
     }
-    log.message = util.format(...args);
+    log.message = log.message || util.format(message);
     return JSON.stringify(log);
   }
 
-  write(type, indent, ...args) {
+  write(type, indent, message) {
     if (this.toStdout[type]) {
       const line = this.json
-        ? this.formatJson(type, indent, ...args)
-        : this.formatPretty(type, indent, ...args);
+        ? this.formatJson(type, indent, message)
+        : this.formatPretty(type, indent, message);
       process.stdout.write(line + '\n');
     }
     if (this.toFile[type]) {
       const line = this.json
-        ? this.formatJson(type, indent, ...args)
-        : this.formatFile(type, indent, ...args);
+        ? this.formatJson(type, indent, message)
+        : this.formatFile(type, indent, message);
       const buffer = Buffer.from(line + '\n');
       this.buffer.push(buffer);
     }
