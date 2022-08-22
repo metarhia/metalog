@@ -2,6 +2,10 @@
 
 ## [Unreleased][unreleased]
 
+- Decompose metalog.js in to 4 files by destiny
+- Implement interface and DI container for external loggers
+- Replace old Logger with new Logger - facade for multiple loggers
+
 ## [3.1.9][] - 2022-07-07
 
 - Package maintenance

@@ -1,45 +1,77 @@
 import EventEmitter = require('events');
+import { Formatter } from './types/formatter';
 
-interface LoggerOptions {
+type LogType = 'log' | 'info' | 'warn' | 'debug' | 'error';
+
+type Format = 'json' | 'pretty' | 'file';
+
+interface Options {
+  [key: string]: any;
+}
+
+interface LoggerConstructor {
+  new (options: Options): LoggerInterface;
+}
+
+export interface LoggerInterface {
+  write(record: string | object): void;
+  open?(): Promise<void>;
+  close?(): Promise<void>;
+}
+
+interface LoggerConf {
+  Construct?: LoggerConstructor;
+  instance?: LoggerInterface;
+  options?: Options;
+  format?: Format;
+  logTypes: LogType[];
+}
+
+interface MetalogOptions {
   path: string;
-  home: string;
+  home?: string;
   workerId?: number;
-  createStream?: () => NodeJS.WritableStream;
-  writeInterval: number;
-  writeBuffer: number;
-  keepDays: number;
-  json?: boolean;
-  toFile?: Array<string>;
-  toStdout?: Array<string>;
+  fs: LoggerConf;
+  stdout: LoggerConf;
+  loggers?: { [name: string]: LoggerConf };
+}
+
+interface LoggerContainer {
+  instance: LoggerInterface;
+  format: (
+    ...args: any[]
+  ) =>
+    | Formatter['none']
+    | Formatter['json']
+    | Formatter['file']
+    | Formatter['pretty'];
+  name: string;
 }
 
 export class Logger extends EventEmitter {
-  active: boolean;
+  constructor(options: MetalogOptions);
+
   path: string;
   workerId: string;
-  createStream: () => NodeJS.WritableStream;
-  writeInterval: number;
-  writeBuffer: number;
-  keepDays: number;
   home: string;
-  stream: NodeJS.WritableStream;
-  reopenTimer: NodeJS.Timer;
-  flushTimer: NodeJS.Timer;
-  lock: boolean;
-  buffer: Array<Buffer>;
-  file: string;
-  toFile: Record<string, boolean>;
-  fsEnabled: boolean;
-  toStdout: Record<string, boolean>;
+  active: boolean;
+  formatter: Formatter;
   console: Console;
-  constructor(args: LoggerOptions);
-  createLogDir(): Promise<void>;
-  open(): Promise<Logger>;
-  close(): Promise<void>;
-  rotate(): Promise<void>;
-  write(type: string, s: string): void;
-  flush(callback: Function): void;
-  normalizeStack(stack: string): string;
+  loggers: LoggerContainer[];
+  types: {
+    log: LoggerContainer[];
+    info: LoggerContainer[];
+    warn: LoggerContainer[];
+    debug: LoggerContainer[];
+    error: LoggerContainer[];
+  };
+
+  private initLoggers(loggerConfs: any): void;
+  private attachLogger(logTypes: LogType[], logger: any): void;
+
+  public open(): Promise<Logger>;
+  public close(): Promise<void>;
+  public write(type: string, s: string): void;
 }
 
-export function openLog(args: LoggerOptions): Promise<Logger>;
+export function openLog(args: MetalogOptions): Promise<Logger>;
