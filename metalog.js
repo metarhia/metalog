@@ -60,11 +60,12 @@ class Logger extends events.EventEmitter {
   }
 
   initLoggers(loggerConfs) {
-    const { path, workerId } = this;
+    const { path, workerId, formatter } = this;
     for (const [name, conf] of Object.entries(loggerConfs)) {
       const { Construct, logTypes, options } = conf;
-      const fmtName = this.formatter[conf.format] ? conf.format : 'none';
-      const format = (...args) => this.formatter[fmtName](...args);
+      const fName = conf.format;
+      const format = (...args) =>
+        formatter[fName] ? formatter[fName](...args) : args;
       const opts = { path, workerId, ...options };
       const instance = conf.instance || new Construct(opts);
       if (instance.on) instance.on('error', (err) => this.emit('error', err));

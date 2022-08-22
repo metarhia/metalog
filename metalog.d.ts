@@ -40,11 +40,7 @@ interface LoggerContainer {
   instance: LoggerInterface;
   format: (
     ...args: any[]
-  ) =>
-    | Formatter['none']
-    | Formatter['json']
-    | Formatter['file']
-    | Formatter['pretty'];
+  ) => Formatter['json'] | Formatter['file'] | Formatter['pretty'] | any[];
   name: string;
 }
 

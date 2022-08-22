@@ -4,7 +4,6 @@ export class Formatter {
   home: string;
   workerId: number;
 
-  public none(...args: any[]): any[];
   public pretty(type: string, ident: number, ...args: any[]): string;
   public file(type: string, ident: number, ...args: any[]): string;
   public json(type: string, ident: number, ...args: any[]): string;
