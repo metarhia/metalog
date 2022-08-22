@@ -5,12 +5,13 @@ const metalog = require('..');
 
 const createLogger = () =>
   metalog.openLog({
-    path: './log',
+    path: '../log',
     workerId: 3,
     writeInterval: 3000,
     writeBuffer: 64 * 1024,
     keepDays: 5,
     toStdout: [],
+    toFile: ['log'],
     home: process.cwd(),
   });
 
@@ -126,9 +127,9 @@ const createLogger = () =>
     test.end();
   });
 
-  metatests.test('logger.rotate', async (test) => {
+  metatests.test('target.rotate', async (test) => {
     const logger = await createLogger();
-    logger.rotate();
+    await logger.target.rotate();
     await logger.close();
     test.end();
   });
@@ -136,7 +137,7 @@ const createLogger = () =>
   metatests.test('Truncate paths in stack traces', async (test) => {
     const logger = await createLogger();
     const message = new Error('Example').stack;
-    const msg = logger.normalizeStack(message);
+    const msg = logger.formatter.normalizeStack(message);
     const dir = process.cwd();
     if (msg.includes(dir)) throw new Error('Path truncation error');
     await logger.close();
