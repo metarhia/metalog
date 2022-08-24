@@ -25,6 +25,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
       - uses: actions/checkout@v2
@@ -41,5 +43,5 @@ jobs:
       - run: npm ci
       - run: npm test
         env:
-          REDIS_HOST: redis
+          REDIS_HOST: '0.0.0.0'
           REDIS_PORT: 6379
