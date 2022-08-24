@@ -17,6 +17,15 @@ jobs:
           - windows-latest
           - macos-latest
 
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node }}
@@ -31,3 +40,6 @@ jobs:
             ${{ runner.os }}-node-
       - run: npm ci
       - run: npm test
+        env:
+          REDIS_HOST: redis
+          REDIS_PORT: 6379

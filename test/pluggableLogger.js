@@ -4,10 +4,12 @@ const metatests = require('metatests');
 const { createClient } = require('redis');
 const metalog = require('..');
 
+const { REDIS_HOST = '127.0.0.1', REDIS_PORT = 6379 } = process.env;
+
 metatests.test('Pluggable logger with instance', async (test) => {
   // logger for redis using streams
   const redisLogger = {
-    client: createClient(),
+    client: createClient({ url: `redis://${REDIS_HOST}:${REDIS_PORT}` }),
 
     on(event, callback) {
       this.client.on(event, callback);
