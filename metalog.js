@@ -8,7 +8,7 @@ const { Console } = require('./lib/console');
 
 const LOG_TYPES = ['log', 'info', 'warn', 'debug', 'error'];
 
-const write = (record) => process.stdout.write(record + '\n');
+const write = (s) => process.stdout.write(s + '\n');
 
 const LOGGERS = {
   fs: {
