@@ -39,14 +39,15 @@ metatests.test('Pluggable logger with instance', async (test) => {
     home: process.cwd(),
     workerId: 1,
     stdout: {
-      logTypes: ['log', 'warn', 'info', 'debug', 'error'],
+      types: ['log', 'warn', 'info', 'debug', 'error'],
     },
     loggers: {
       redis: {
         instance: redisLogger,
-        logTypes: ['log', 'info'],
+        types: ['log', 'info'],
       },
     },
+
   });
 
   // write logs to redis and stdout
@@ -106,13 +107,12 @@ metatests.test('Pluggable logger with Constructor', async (test) => {
     home: process.cwd(),
     workerId: 1,
     stdout: {
-      logTypes: ['log', 'warn', 'info', 'debug', 'error'],
+      types: ['log', 'warn', 'info', 'debug', 'error'],
     },
     loggers: {
       redis: {
-        Construct: RedisLogger,
         options: { url: `redis://${REDIS_HOST}:${REDIS_PORT}` },
-        logTypes: ['log', 'info'],
+        types: ['log', 'info'],
       },
     },
   });

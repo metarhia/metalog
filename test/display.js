@@ -8,15 +8,13 @@ const metalog = require('..');
     home: process.cwd(),
     workerId: 7,
     fs: {
-      options: {
-        writeInterval: 3000,
-        writeBuffer: 64 * 1024,
-        keepDays: 5,
-      },
-      logTypes: ['log', 'info', 'warn', 'debug', 'error'],
+      keepDays: 5,
+      writeInterval: 3000,
+      writeBuffer: 64 * 1024,
+      types: ['log', 'info', 'warn', 'debug', 'error'],
     },
     stdout: {
-      logTypes: ['log', 'info', 'warn', 'debug', 'error'],
+      types: ['log', 'info', 'warn', 'debug', 'error'],
     },
   });
 
