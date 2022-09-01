@@ -24,8 +24,6 @@ const createLogger = () =>
     },
   });
 
-fs.rmdirSync('./log', { recursive: true });
-
 (async () => {
   const logger1 = await createLogger();
   const { console } = logger1;
