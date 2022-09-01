@@ -1,8 +1,11 @@
 'use strict';
 
+const path = require('node:path');
+const fs = require('fs');
 const metatests = require('metatests');
+const metautil = require('metautil');
 const { Formatter } = require('../lib/formatter.js');
-const { FsLogger } = require('../lib/fsLogger.js');
+const { FsWritable } = require('../lib/fsWritable.js');
 const metalog = require('..');
 
 const createLogger = () =>
@@ -20,6 +23,8 @@ const createLogger = () =>
       types: ['log', 'info', 'warn', 'debug', 'error'],
     },
   });
+
+fs.rmdirSync('./log', { recursive: true });
 
 (async () => {
   const logger1 = await createLogger();
@@ -101,72 +106,113 @@ const createLogger = () =>
   setTimeout(() => {
     logger1.close();
   }, 500);
+})();
 
-  metatests.test('logger write more then 60Mb', async (test) => {
-    const logger = await metalog.openLog({
-      path: './log',
-      home: process.cwd(),
-      workerId: 3,
-      fs: {
-        keepDays: 5,
-        writeInterval: 3000,
-        writeBuffer: 64 * 1024,
-        types: ['log', 'info', 'warn', 'debug', 'error'],
-      },
-      stdout: {
-        types: ['log', 'warn', 'debug', 'error'],
-      },
-    });
-    const begin = process.hrtime();
-    for (let i = 0; i < 1000000; i++) {
-      logger.console.info('Write more then 60Mb logs, line: ' + i);
-    }
-    logger.on('close', () => {
-      const end = process.hrtime(begin);
-      const time = end[0] * 1e9 + end[1];
-      console.log({ time });
-      test.end();
-    });
-    await logger.close();
+metatests.test('FsWritable.rotate', async (test) => {
+  const logger = new FsWritable({
+    path: './log',
+    workerId: 3,
+    writeInterval: 3000,
+    writeBuffer: 64 * 1024,
+    keepDays: 5,
   });
+  await logger.open();
+  logger.rotate();
+  await logger.close();
+  test.end();
+});
 
-  metatests.test('logger.close', async (test) => {
-    const logger = await createLogger();
-    logger.console.info('Info log message');
-    await logger.close();
-    test.end();
+metatests.test('Truncate paths in stack traces', (test) => {
+  const home = process.cwd();
+  const workerId = 0;
+  const formatter = new Formatter(home, workerId);
+  const message = new Error('Example').stack;
+  const msg = formatter.normalizeStack(message);
+  const dir = process.cwd();
+  if (msg.includes(dir)) throw new Error('Path truncation error');
+  test.end();
+});
+
+metatests.test('logger no fs', async (test) => {
+  const logger = await metalog.openLog({
+    path: './log',
+    home: process.cwd(),
+    workerId: 32,
+    stdout: {
+      types: ['log', 'warn', 'info', 'debug', 'error'],
+    },
   });
+  logger.console.debug('YES YES YES YES YES');
+  const fileName = metautil.nowDate() + '-' + logger.workerId + '.log';
+  const filePath = path.join(logger.path, fileName);
+  const exist = fs.existsSync(filePath);
+  test.strictEqual(exist, false);
+  await logger.close();
+  test.end();
+});
 
-  metatests.test('logger.close after close', async (test) => {
-    const logger = await createLogger();
-    logger.console.info('Info log message');
-    await logger.close();
-    await logger.close();
-    test.end();
+metatests.test('logger no sdtout', async (test) => {
+  const logger = await metalog.openLog({
+    path: './log',
+    home: process.cwd(),
+    workerId: 32,
+    fs: {
+      keepDays: 1,
+      writeInterval: 1000,
+      writeBuffer: 64 * 1024,
+      types: ['log', 'info', 'warn', 'debug', 'error'],
+      format: 'json',
+    },
   });
+  const expect = 'NO NO NO NO NO';
+  logger.console.log(expect);
+  const fileName = metautil.nowDate() + '-' + logger.workerId + '.log';
+  const filePath = path.join(logger.path, fileName);
+  await logger.close();
+  const file = fs.readFileSync(filePath, { encoding: 'utf8' });
+  test.strictEqual(JSON.parse(file).message, expect);
+  test.end();
+});
 
-  metatests.test('FsLogger.rotate', async (test) => {
-    const logger = new FsLogger({
-      path: './log',
-      workerId: 3,
+metatests.test('logger write more then 60Mb', async (test) => {
+  const logger = await metalog.openLog({
+    path: './log',
+    home: process.cwd(),
+    workerId: 3,
+    fs: {
+      keepDays: 5,
       writeInterval: 3000,
       writeBuffer: 64 * 1024,
-      keepDays: 5,
-    });
-    await logger.open();
-    logger.rotate();
-    await logger.close();
+      types: ['log', 'info', 'warn', 'debug', 'error'],
+    },
+    stdout: {
+      types: ['log', 'warn', 'debug', 'error'],
+    },
+  });
+  const begin = process.hrtime();
+  for (let i = 0; i < 1000000; i++) {
+    logger.console.info('Write more then 60Mb logs, line: ' + i);
+  }
+  logger.on('close', () => {
+    const end = process.hrtime(begin);
+    const time = end[0] * 1e9 + end[1];
+    console.log({ time });
     test.end();
   });
+  await logger.close();
+});
 
-  metatests.test('Truncate paths in stack traces', (test) => {
-    const home = process.cwd();
-    const workerId = 0;
-    const formatter = new Formatter(home, workerId);
-    const message = new Error('Example').stack;
-    const msg = formatter.normalizeStack(message);
-    const dir = process.cwd();
-    if (msg.includes(dir)) throw new Error('Path truncation error');
-    test.end();
-  });
-})();
+metatests.test('logger.close', async (test) => {
+  const logger = await createLogger();
+  logger.console.info('Info log message');
+  await logger.close();
+  test.end();
+});
+
+metatests.test('logger.close after close', async (test) => {
+  const logger = await createLogger();
+  logger.console.info('Info log message');
+  await logger.close();
+  await logger.close();
+  test.end();
+});

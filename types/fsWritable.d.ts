@@ -1,29 +1,29 @@
+import { Writable, LogType, Format } from './interfaces';
+
 import EventEmitter = require('events');
 
-import { LoggerInterface } from '../metalog';
+export class FsWritable extends EventEmitter implements Writable {
+  constructor(options: {
+    path: string;
+    workerId: string;
 
-export interface FsLoggerOptions {
-  path: string;
-  workerId: number;
-
-  createStream?: () => NodeJS.WritableStream;
-  writeInterval: number;
-  writeBuffer: number;
-  keepDays: number;
-  logTypes: string[];
-}
-
-export class FsLogger extends EventEmitter implements LoggerInterface {
-  constructor(options?: FsLoggerOptions);
+    createStream?: () => NodeJS.WritableStream;
+    writeInterval?: number;
+    writeBuffer?: number;
+    keepDays?: number;
+    format: Format;
+    types: LogType[];
+  });
 
   path: string;
-  workerId: number;
+  workerId: string;
 
   createStream: () => NodeJS.WritableStream;
   writeInterval: number;
   writeBuffer: number;
   keepDays: number;
-  logTypes: string[];
+  format: Format;
+  types: LogType[];
 
   active: boolean;
   stream: null | NodeJS.WritableStream;
