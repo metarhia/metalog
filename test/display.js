@@ -5,11 +5,17 @@ const metalog = require('..');
 (async () => {
   const logger = await metalog.openLog({
     path: './log',
-    workerId: 7,
-    writeInterval: 3000,
-    writeBuffer: 64 * 1024,
-    keepDays: 5,
     home: process.cwd(),
+    workerId: 7,
+    fs: {
+      keepDays: 5,
+      writeInterval: 3000,
+      writeBuffer: 64 * 1024,
+      types: ['log', 'info', 'warn', 'debug', 'error'],
+    },
+    stdout: {
+      types: ['log', 'info', 'warn', 'debug', 'error'],
+    },
   });
 
   const { console } = logger;
