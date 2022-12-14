@@ -52,7 +52,7 @@
     "node": "14 || 16 || 18 || 19"
   },
   "dependencies": {
-    "concolor": "^1.0.3",
+    "concolor": "^1.0.4",
     "metautil": "^3.5.24"
   },
   "devDependencies": {
