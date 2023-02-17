@@ -31,6 +31,6 @@ await logger.close();
 
 ## License & Contributors
 
-Copyright (c) 2017-2022 [Metarhia contributors](https://github.com/metarhia/metalog/graphs/contributors).
+Copyright (c) 2017-2023 [Metarhia contributors](https://github.com/metarhia/metalog/graphs/contributors).
 Metalog is [MIT licensed](./LICENSE).\
 Metalog is a part of [Metarhia](https://github.com/metarhia) technology stack.
