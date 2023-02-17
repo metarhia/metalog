@@ -38,10 +38,7 @@
   "main": "metalog.js",
   "types": "metalog.d.ts",
   "readmeFilename": "README.md",
-  "files": [
-    "types/",
-    "metalog.d.ts"
-  ],
+  "files": ["types/", "metalog.d.ts"],
   "scripts": {
     "test": "npm run lint && npm run types && metatests test/",
     "types": "tsc -p tsconfig.json",
