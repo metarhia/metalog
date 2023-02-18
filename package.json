@@ -49,18 +49,18 @@
     "node": "14 || 16 || 18 || 19"
   },
   "dependencies": {
-    "concolor": "^1.0.3",
-    "metautil": "^3.5.24"
+    "concolor": "^1.0.4",
+    "metautil": "^3.6.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
-    "eslint": "^8.26.0",
+    "@types/node": "^18.14.0",
+    "eslint": "^8.34.0",
     "eslint-config-metarhia": "^8.1.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-import": "^2.25.4",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^4.0.0",
     "metatests": "^0.8.2",
-    "prettier": "^2.6.0",
-    "typescript": "^4.8.4"
+    "prettier": "^2.8.4",
+    "typescript": "^4.9.5"
   }
 }
