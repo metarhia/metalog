@@ -2,6 +2,8 @@
 
 ## [Unreleased][unreleased]
 
+- Update dependencies and fix security issues
+
 ## [3.1.9][] - 2022-07-07
 
 - Package maintenance
