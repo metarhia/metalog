@@ -46,7 +46,7 @@
     "fmt": "prettier --write \"**/*.js\" \"**/*.json\" \"**/*.md\" \"**/.*rc\" \"**/*.ts\""
   },
   "engines": {
-    "node": "14 || 16 || 18 || 19"
+    "node": "^14.18 || 16 || 18 || 19"
   },
   "dependencies": {
     "concolor": "^1.0.4",
