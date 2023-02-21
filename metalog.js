@@ -1,11 +1,11 @@
 'use strict';
 
-const fs = require('fs');
+const fs = require('node:fs');
 const fsp = fs.promises;
-const path = require('path');
-const util = require('util');
-const events = require('events');
-const readline = require('readline');
+const path = require('node:path');
+const util = require('node:util');
+const events = require('node:events');
+const readline = require('node:readline');
 const metautil = require('metautil');
 const concolor = require('concolor');
 
