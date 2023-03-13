@@ -2,7 +2,10 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.10][] - 2023-03-13
+
 - Update dependencies and fix security issues
+- Add `node:` prefix in require for built-in modules
 
 ## [3.1.9][] - 2022-07-07
 
@@ -74,7 +77,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.9...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.10...HEAD
+[3.1.10]: https://github.com/metarhia/metalog/compare/v3.1.9...v3.1.10
 [3.1.9]: https://github.com/metarhia/metalog/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/metarhia/metalog/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/metarhia/metalog/compare/v3.1.6...v3.1.7
