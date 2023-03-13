@@ -49,7 +49,7 @@
     "node": "^14.18 || 16 || 18 || 19"
   },
   "dependencies": {
-    "concolor": "^1.0.4",
+    "concolor": "^1.0.5",
     "metautil": "^3.6.0"
   },
   "devDependencies": {
