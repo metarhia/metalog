@@ -205,7 +205,8 @@ class Logger extends events.EventEmitter {
     this.buffer = [];
     this.file = '';
     this.toFile = logTypes(toFile);
-    this.fsEnabled = Object.keys(this.toFile).length !== 0;
+    this.fsEnabled =
+      Object.values(this.toFile).filter((flag) => flag).length !== 0;
     this.toStdout = logTypes(toStdout);
     this.console = new Console((...args) => this.write(...args));
     return this.open();
