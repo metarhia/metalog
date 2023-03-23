@@ -188,7 +188,7 @@ class Logger extends events.EventEmitter {
     super();
     const { workerId = 0, createStream = fs.createWriteStream } = args;
     const { writeInterval, writeBuffer, keepDays, home, json } = args;
-    const { toFile, toStdout } = args;
+    const { toFile = [], toStdout = [] } = args;
     this.active = false;
     this.path = args.path;
     this.workerId = `W${workerId}`;
@@ -205,8 +205,7 @@ class Logger extends events.EventEmitter {
     this.buffer = [];
     this.file = '';
     this.toFile = logTypes(toFile);
-    this.fsEnabled =
-      Object.values(this.toFile).filter((flag) => flag).length !== 0;
+    this.fsEnabled = toFile.length !== 0;
     this.toStdout = logTypes(toStdout);
     this.console = new Console((...args) => this.write(...args));
     return this.open();
