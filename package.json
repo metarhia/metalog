@@ -1,6 +1,6 @@
 {
   "name": "metalog",
-  "version": "3.1.10",
+  "version": "3.1.11",
   "author": "Timur Shemsedinov <timur.shemsedinov@gmail.com>",
   "description": "Logger for Metarhia",
   "license": "MIT",
@@ -49,8 +49,8 @@
     "node": "16 || 18 || 19 || 20"
   },
   "dependencies": {
-    "concolor": "^1.0.5",
-    "metautil": "^3.7.1"
+    "concolor": "^1.0.6",
+    "metautil": "^3.7.2"
   },
   "devDependencies": {
     "@types/node": "^18.16.1",
