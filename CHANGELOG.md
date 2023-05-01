@@ -2,6 +2,12 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.11][] - 2023-05-01
+
+- Drop node.js 14 support, add node.js 20
+- Convert package_lock.json to lockfileVersion 2
+- Update dependencies
+
 ## [3.1.10][] - 2023-03-13
 
 - Update dependencies and fix security issues
@@ -77,7 +83,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.10...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.11...HEAD
+[3.1.11]: https://github.com/metarhia/metalog/compare/v3.1.10...v3.1.11
 [3.1.10]: https://github.com/metarhia/metalog/compare/v3.1.9...v3.1.10
 [3.1.9]: https://github.com/metarhia/metalog/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/metarhia/metalog/compare/v3.1.7...v3.1.8
