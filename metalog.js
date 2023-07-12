@@ -216,10 +216,7 @@ class Logger extends events.EventEmitter {
       fs.access(this.path, (err) => {
         if (!err) resolve();
         fs.mkdir(this.path, (err) => {
-          if (!err || err.code === 'EEXIST') {
-            resolve();
-            return;
-          }
+          if (!err || err.code === 'EEXIST') return void resolve();
           const error = new Error(`Can not create directory: ${this.path}\n`);
           this.emit('error', error);
           reject();
@@ -277,10 +274,7 @@ class Logger extends events.EventEmitter {
     }
     return new Promise((resolve, reject) => {
       this.flush((err) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+        if (err) return void reject(err);
         this.active = false;
         stream.end(() => {
           clearInterval(this.flushTimer);
