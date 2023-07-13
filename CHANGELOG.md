@@ -2,6 +2,12 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.12][] - 2023-07-13
+
+- Use `isError` from metautil
+- Use private fields in `Console`
+- Maintenance: update typings, dependencies, eslint rules, fix code style
+
 ## [3.1.11][] - 2023-05-01
 
 - Drop node.js 14 support, add node.js 20
@@ -83,7 +89,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.11...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.12...HEAD
+[3.1.12]: https://github.com/metarhia/metalog/compare/v3.1.11...v3.1.12
 [3.1.11]: https://github.com/metarhia/metalog/compare/v3.1.10...v3.1.11
 [3.1.10]: https://github.com/metarhia/metalog/compare/v3.1.9...v3.1.10
 [3.1.9]: https://github.com/metarhia/metalog/compare/v3.1.8...v3.1.9
