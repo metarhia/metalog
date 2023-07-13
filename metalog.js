@@ -78,71 +78,73 @@ const getNextReopen = () => {
 };
 
 class Console {
+  #write;
+  #groupIndent = 0;
+  #counts = new Map();
+  #times = new Map();
+  #readline = readline;
+
   constructor(write) {
-    this._write = write;
-    this._groupIndent = 0;
-    this._counts = new Map();
-    this._times = new Map();
-    this._readline = readline;
+    this.#write = write;
   }
 
   assert(assertion, ...args) {
     try {
       console.assert(assertion, ...args);
     } catch (err) {
-      this._write('error', this._groupIndent, err.stack);
+      this.#write('error', this.#groupIndent, err.stack);
     }
   }
 
   clear() {
-    this._readline.cursorTo(process.stdout, 0, 0);
-    this._readline.clearScreenDown(process.stdout);
+    this.#readline.cursorTo(process.stdout, 0, 0);
+    this.#readline.clearScreenDown(process.stdout);
   }
 
   count(label = 'default') {
-    let cnt = this._counts.get(label) || 0;
+    let cnt = this.#counts.get(label) || 0;
     cnt++;
-    this._counts.set(label, cnt);
-    this._write('debug', this._groupIndent, `${label}: ${cnt}`);
+    this.#counts.set(label, cnt);
+    this.#write('debug', this.#groupIndent, `${label}: ${cnt}`);
   }
 
   countReset(label = 'default') {
-    this._counts.delete(label);
+    this.#counts.delete(label);
   }
 
   debug(...args) {
-    this._write('debug', this._groupIndent, ...args);
+    this.#write('debug', this.#groupIndent, ...args);
   }
 
   dir(...args) {
-    this._write('debug', this._groupIndent, ...args);
+    this.#write('debug', this.#groupIndent, ...args);
   }
 
   trace(...args) {
     const msg = util.format(...args);
     const err = new Error(msg);
-    this._write('debug', this._groupIndent, `Trace${err.stack}`);
+    this.#write('debug', this.#groupIndent, `Trace${err.stack}`);
   }
 
   info(...args) {
-    this._write('info', this._groupIndent, ...args);
+    this.#write('info', this.#groupIndent, ...args);
   }
 
   log(...args) {
-    this._write('log', this._groupIndent, ...args);
+    this.#write('log', this.#groupIndent, ...args);
   }
 
   warn(...args) {
-    this._write('warn', this._groupIndent, ...args);
+    this.#write('warn', this.#groupIndent, ...args);
   }
 
   error(...args) {
-    this._write('error', this._groupIndent, ...args);
+    this.#write('error', this.#groupIndent, ...args);
   }
 
   group(...args) {
     if (args.length !== 0) this.log(...args);
-    this._groupIndent += INDENT;
+    this.#groupIndent += INDENT;
   }
 
   groupCollapsed(...args) {
@@ -150,34 +152,34 @@ class Console {
   }
 
   groupEnd() {
-    if (this._groupIndent.length === 0) return;
-    this._groupIndent -= INDENT;
+    if (this.#groupIndent.length === 0) return;
+    this.#groupIndent -= INDENT;
   }
 
   table(tabularData) {
-    this._write('log', 0, JSON.stringify(tabularData));
+    this.#write('log', 0, JSON.stringify(tabularData));
   }
 
   time(label = 'default') {
-    this._times.set(label, process.hrtime());
+    this.#times.set(label, process.hrtime());
   }
 
   timeEnd(label = 'default') {
-    const startTime = this._times.get(label);
+    const startTime = this.#times.get(label);
     const totalTime = process.hrtime(startTime);
     const totalTimeMs = totalTime[0] * 1e3 + totalTime[1] / 1e6;
     this.timeLog(label, `${label}: ${totalTimeMs}ms`);
-    this._times.delete(label);
+    this.#times.delete(label);
   }
 
   timeLog(label, ...args) {
-    const startTime = this._times.get(label);
+    const startTime = this.#times.get(label);
     if (startTime === undefined) {
       const msg = `Warning: No such label '${label}'`;
-      this._write('warn', this._groupIndent, msg);
+      this.#write('warn', this.#groupIndent, msg);
       return;
     }
-    this._write('debug', this._groupIndent, ...args);
+    this.#write('debug', this.#groupIndent, ...args);
   }
 }
 
