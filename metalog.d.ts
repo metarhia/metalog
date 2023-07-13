@@ -1,4 +1,4 @@
-import EventEmitter = require('node:events');
+import { EventEmitter } from 'node:events';
 
 interface LoggerOptions {
   path: string;
