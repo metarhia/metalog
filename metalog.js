@@ -83,6 +83,7 @@ class Console {
     this._groupIndent = 0;
     this._counts = new Map();
     this._times = new Map();
+    this._readline = readline;
   }
 
   assert(assertion, ...args) {
@@ -94,8 +95,8 @@ class Console {
   }
 
   clear() {
-    readline.cursorTo(process.stdout, 0, 0);
-    readline.clearScreenDown(process.stdout);
+    this._readline.cursorTo(process.stdout, 0, 0);
+    this._readline.clearScreenDown(process.stdout);
   }
 
   count(label = 'default') {
