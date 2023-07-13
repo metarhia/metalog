@@ -77,9 +77,6 @@ const getNextReopen = () => {
   return nextDate - curTime + DAY_MILLISECONDS;
 };
 
-const isError = (val) =>
-  Object.prototype.toString.call(val) === '[object Error]';
-
 class Console {
   constructor(write) {
     this._write = write;
@@ -345,13 +342,13 @@ class Logger extends events.EventEmitter {
       level: type,
       message: null,
     };
-    if (isError(args[0])) {
+    if (metautil.isError(args[0])) {
       log.err = this.expandError(args[0]);
       args = args.slice(1);
     } else if (typeof args[0] === 'object') {
       Object.assign(log, args[0]);
-      if (isError(log.err)) log.err = this.expandError(log.err);
-      if (isError(log.error)) log.error = this.expandError(log.error);
+      if (metautil.isError(log.err)) log.err = this.expandError(log.err);
+      if (metautil.isError(log.error)) log.error = this.expandError(log.error);
       args = args.slice(1);
     }
     log.message = util.format(...args);
