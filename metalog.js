@@ -347,12 +347,12 @@ class Logger extends events.EventEmitter {
     };
     if (metautil.isError(args[0])) {
       log.err = this.expandError(args[0]);
-      args = args.slice(1);
+      args = args.subarray(1);
     } else if (typeof args[0] === 'object') {
       Object.assign(log, args[0]);
       if (metautil.isError(log.err)) log.err = this.expandError(log.err);
       if (metautil.isError(log.error)) log.error = this.expandError(log.error);
-      args = args.slice(1);
+      args = args.subarray(1);
     }
     log.message = util.format(...args);
     return JSON.stringify(log);
