@@ -47,7 +47,7 @@ const DEFAULT_FLAGS = {
   error: false,
 };
 
-const logTypes = (types = LOG_TYPES) => {
+const logTypes = (types) => {
   const flags = { ...DEFAULT_FLAGS };
   for (const type of types) {
     flags[type] = true;
@@ -188,7 +188,7 @@ class Logger extends events.EventEmitter {
     super();
     const { workerId = 0, createStream = fs.createWriteStream } = args;
     const { writeInterval, writeBuffer, keepDays, home, json } = args;
-    const { toFile = [], toStdout = [] } = args;
+    const { toFile = LOG_TYPES, toStdout = LOG_TYPES } = args;
     this.active = false;
     this.path = args.path;
     this.workerId = `W${workerId}`;
