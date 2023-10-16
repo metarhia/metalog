@@ -203,6 +203,7 @@ class Logger extends events.EventEmitter {
     this.flushTimer = null;
     this.lock = false;
     this.buffer = [];
+    this.bufferLength = 0;
     this.file = '';
     this.toFile = logTypes(toFile);
     this.fsEnabled = toFile.length !== 0;
@@ -246,8 +247,7 @@ class Logger extends events.EventEmitter {
       });
     }, nextReopen);
     if (this.keepDays) await this.rotate();
-    const options = { flags: 'a', bufferSize: this.writeBuffer };
-    this.stream = this.createStream(this.file, options);
+    this.stream = this.createStream(this.file, { flags: 'a' });
     this.flushTimer = setInterval(() => {
       this.flush();
     }, this.writeInterval);
@@ -371,6 +371,8 @@ class Logger extends events.EventEmitter {
         : this.formatFile(type, indent, ...args);
       const buffer = Buffer.from(line + '\n');
       this.buffer.push(buffer);
+      this.bufferLength += buffer.length;
+      if (this.bufferLength >= this.writeBuffer) this.flush();
     }
   }
 
@@ -392,6 +394,7 @@ class Logger extends events.EventEmitter {
     this.lock = true;
     const buffer = Buffer.concat(this.buffer);
     this.buffer.length = 0;
+    this.bufferLength = 0;
     this.stream.write(buffer, () => {
       this.lock = false;
       this.emit('unlocked');
