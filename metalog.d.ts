@@ -27,6 +27,7 @@ export class Logger extends EventEmitter {
   flushTimer: NodeJS.Timer;
   lock: boolean;
   buffer: Array<Buffer>;
+  bufferLength: number;
   file: string;
   toFile: Record<string, boolean>;
   fsEnabled: boolean;
