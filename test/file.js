@@ -1,6 +1,6 @@
 'use strict';
 
-const metatests = require('metatests');
+const test = require('node:test');
 const metalog = require('..');
 
 const createLogger = () =>
@@ -18,84 +18,71 @@ const createLogger = () =>
   const logger1 = await createLogger();
   const { console } = logger1;
 
-  metatests.test('console.assert', (test) => {
+  test('console.assert', () => {
     console.assert(false, 'Assert message: not passed');
-    test.end();
   });
 
-  metatests.test('console.count', (test) => {
+  test('console.count', () => {
     console.count('count-label');
-    test.end();
   });
 
-  metatests.test('console.countReset', (test) => {
+  test('console.countReset', () => {
     console.countReset('count-label');
-    test.end();
   });
 
-  metatests.test('console.debub', (test) => {
+  test('console.debub', () => {
     console.debug('Test log message for console.debug', 'arg2');
-    test.end();
   });
 
-  metatests.test('console.dir', (test) => {
+  test('console.dir', () => {
     console.dir('Test log message for console.dir', 'arg2');
-    test.end();
   });
 
-  metatests.test('console.error', (test) => {
+  test('console.error', () => {
     const err = new Error('Test log message for console.error');
     console.error(err);
-    test.end();
   });
 
-  metatests.test('console.group', (test) => {
+  test('console.group', () => {
     console.group('Test log message for console.group', 'arg2');
     console.groupCollapsed('Test log message for console.group', 'arg2');
     console.groupEnd();
-    test.end();
   });
 
-  metatests.test('console.info', (test) => {
+  test('console.info', () => {
     console.info('Test log message for console.info', 'arg2');
-    test.end();
   });
 
-  metatests.test('console.log', (test) => {
+  test('console.log', () => {
     console.log('Test log message for console.log', 'arg2');
-    test.end();
   });
 
-  metatests.test('console.table', (test) => {
+  test('console.table', () => {
     console.table([
       { a: 1, b: 2 },
       { a: 3, b: 4 },
     ]);
-    test.end();
   });
 
-  metatests.test('console.time', (test) => {
+  test('console.time', () => {
     console.time('time-label');
     console.timeEnd('time-label');
     console.timeLog('time-label', 'Test log message for console.timeLog');
-    test.end();
   });
 
-  metatests.test('console.trace', (test) => {
+  test('console.trace', () => {
     console.trace('Test log message for console.trace', 'arg2');
-    test.end();
   });
 
-  metatests.test('console.warn', (test) => {
+  test('console.warn', () => {
     console.warn('Test log message for console.warn', 'arg2');
-    test.end();
   });
 
   setTimeout(() => {
     logger1.close();
   }, 500);
 
-  metatests.test('logger write more then 60Mb', async (test) => {
+  test('logger write more then 60Mb', async () => {
     const logger = await createLogger();
     logger.toStdout.INFO = false;
     const begin = process.hrtime();
@@ -106,40 +93,35 @@ const createLogger = () =>
       const end = process.hrtime(begin);
       const time = end[0] * 1e9 + end[1];
       console.log({ time });
-      test.end();
     });
     await logger.close();
   });
 
-  metatests.test('logger.close', async (test) => {
+  test('logger.close', async () => {
     const logger = await createLogger();
     logger.console.info('Info log message');
     await logger.close();
-    test.end();
   });
 
-  metatests.test('logger.close after close', async (test) => {
+  test('logger.close after close', async () => {
     const logger = await createLogger();
     logger.console.info('Info log message');
     await logger.close();
     await logger.close();
-    test.end();
   });
 
-  metatests.test('logger.rotate', async (test) => {
+  test('logger.rotate', async () => {
     const logger = await createLogger();
     logger.rotate();
     await logger.close();
-    test.end();
   });
 
-  metatests.test('Truncate paths in stack traces', async (test) => {
+  test('Truncate paths in stack traces', async () => {
     const logger = await createLogger();
     const message = new Error('Example').stack;
     const msg = logger.normalizeStack(message);
     const dir = process.cwd();
     if (msg.includes(dir)) throw new Error('Path truncation error');
     await logger.close();
-    test.end();
   });
 })();
