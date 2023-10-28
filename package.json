@@ -24,7 +24,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/metarhia/metalog"
+    "url": "git+https://github.com/metarhia/metalog.git"
   },
   "bugs": {
     "url": "https://github.com/metarhia/metalog/issues",
@@ -38,7 +38,10 @@
   "main": "metalog.js",
   "types": "metalog.d.ts",
   "readmeFilename": "README.md",
-  "files": ["types/", "metalog.d.ts"],
+  "files": [
+    "types/",
+    "metalog.d.ts"
+  ],
   "scripts": {
     "test": "npm run lint && npm run types && node --test",
     "types": "tsc -p tsconfig.json",
