@@ -2,6 +2,21 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.14][] - 2023-12-10
+
+- Moved to native node test runner
+- Update dependencies
+- Fix package file: url and formatting
+- Update Guthub actions CI config and add nodejs 21 to CI
+- Add "es2020" to eslint configuration
+
+## [3.1.13][] - 2023-10-22
+
+- Added flush logs on buffer size condition
+- Added default params toFile, toStdout in constructor
+- Drop node.js 16 and 19
+- Update dependencies and convert lockfileVersion 2 to 3
+
 ## [3.1.12][] - 2023-07-13
 
 - Use `isError` from metautil
@@ -89,7 +104,9 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.12...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.14...HEAD
+[3.1.14]: https://github.com/metarhia/metalog/compare/v3.1.13...v3.1.14
+[3.1.13]: https://github.com/metarhia/metalog/compare/v3.1.12...v3.1.13
 [3.1.12]: https://github.com/metarhia/metalog/compare/v3.1.11...v3.1.12
 [3.1.11]: https://github.com/metarhia/metalog/compare/v3.1.10...v3.1.11
 [3.1.10]: https://github.com/metarhia/metalog/compare/v3.1.9...v3.1.10
