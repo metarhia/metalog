@@ -2,6 +2,11 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.15][] - 2024-08-30
+
+- Update eslint to 9.x and prettier with configs
+- Add node.js 22 to CI
+
 ## [3.1.14][] - 2023-12-10
 
 - Moved to native node test runner
