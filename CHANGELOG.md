@@ -2,6 +2,11 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.16][] - 2025-06-05
+
+- Add node.js 23 and 24 to CI
+- Update dependencies
+
 ## [3.1.15][] - 2024-08-30
 
 - Update eslint to 9.x and prettier with configs
@@ -109,7 +114,9 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.14...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.16...HEAD
+[3.1.16]: https://github.com/metarhia/metalog/compare/v3.1.15...v3.1.16
+[3.1.15]: https://github.com/metarhia/metalog/compare/v3.1.14...v3.1.15
 [3.1.14]: https://github.com/metarhia/metalog/compare/v3.1.13...v3.1.14
 [3.1.13]: https://github.com/metarhia/metalog/compare/v3.1.12...v3.1.13
 [3.1.12]: https://github.com/metarhia/metalog/compare/v3.1.11...v3.1.12
