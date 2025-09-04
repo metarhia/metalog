@@ -11,6 +11,28 @@ interface LoggerOptions {
   json?: boolean;
   toFile?: Array<string>;
   toStdout?: Array<string>;
+  crash?: string;
+}
+
+interface Console {
+  assert(assertion: unknown, ...args: unknown[]): void;
+  clear(): void;
+  count(label?: string): void;
+  countReset(label?: string): void;
+  debug(...args: unknown[]): void;
+  dir(...args: unknown[]): void;
+  trace(...args: unknown[]): void;
+  info(...args: unknown[]): void;
+  log(...args: unknown[]): void;
+  warn(...args: unknown[]): void;
+  error(...args: unknown[]): void;
+  group(...args: unknown[]): void;
+  groupCollapsed(...args: unknown[]): void;
+  groupEnd(): void;
+  table(tabularData: unknown): void;
+  time(label?: string): void;
+  timeEnd(label?: string): void;
+  timeLog(label: string, ...args: unknown[]): void;
 }
 
 export class Logger extends EventEmitter {
@@ -22,6 +44,7 @@ export class Logger extends EventEmitter {
   writeBuffer: number;
   keepDays: number;
   home: string;
+  json: boolean;
   stream: NodeJS.WritableStream;
   reopenTimer: NodeJS.Timer;
   flushTimer: NodeJS.Timer;
@@ -38,9 +61,14 @@ export class Logger extends EventEmitter {
   open(): Promise<Logger>;
   close(): Promise<void>;
   rotate(): Promise<void>;
-  write(type: string, s: string): void;
-  flush(callback: Function): void;
+  format(type: string, indent: number, ...args: unknown[]): string;
+  formatPretty(type: string, indent: number, ...args: unknown[]): string;
+  formatFile(type: string, indent: number, ...args: unknown[]): string;
+  formatJson(type: string, indent: number, ...args: unknown[]): string;
+  write(type: string, indent: number, ...args: unknown[]): void;
+  flush(callback?: (err?: Error) => void): void;
   normalizeStack(stack: string): string;
+  expandError(err: Error): unknown;
 }
 
 export function openLog(args: LoggerOptions): Promise<Logger>;
