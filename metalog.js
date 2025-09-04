@@ -213,18 +213,8 @@ class Logger extends events.EventEmitter {
     return this.open();
   }
 
-  createLogDir() {
-    return new Promise((resolve, reject) => {
-      fs.access(this.path, (err) => {
-        if (!err) resolve();
-        fs.mkdir(this.path, (err) => {
-          if (!err || err.code === 'EEXIST') return void resolve();
-          const error = new Error(`Can not create directory: ${this.path}\n`);
-          this.emit('error', error);
-          reject();
-        });
-      });
-    });
+  static async create(options) {
+    return new Logger(options);
   }
 
   async open() {
@@ -290,6 +280,20 @@ class Logger extends events.EventEmitter {
             }
             resolve();
           });
+        });
+      });
+    });
+  }
+
+  createLogDir() {
+    return new Promise((resolve, reject) => {
+      fs.access(this.path, (err) => {
+        if (!err) resolve();
+        fs.mkdir(this.path, (err) => {
+          if (!err || err.code === 'EEXIST') return void resolve();
+          const error = new Error(`Can not create directory: ${this.path}\n`);
+          this.emit('error', error);
+          reject();
         });
       });
     });
@@ -446,6 +450,4 @@ class Logger extends events.EventEmitter {
   }
 }
 
-const openLog = async (options) => new Logger(options);
-
-module.exports = { Logger, openLog };
+module.exports = { Logger };

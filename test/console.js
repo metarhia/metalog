@@ -1,6 +1,6 @@
 'use strict';
 
-const metalog = require('..');
+const { Logger } = require('..');
 
 const testConsoleMethods = async (logger) => {
   const { console } = logger;
@@ -31,7 +31,7 @@ const testConsoleMethods = async (logger) => {
 
 const run = async () => {
   console.log('Testing regular logging mode...');
-  const logger = await metalog.openLog({
+  const logger = await Logger.create({
     path: './log',
     workerId: 7,
     writeInterval: 3000,
@@ -44,7 +44,7 @@ const run = async () => {
   await logger.close();
 
   console.log('\nTesting JSON logging mode...');
-  const jsonLogger = await metalog.openLog({
+  const jsonLogger = await Logger.create({
     path: './log',
     workerId: 7,
     writeInterval: 3000,
