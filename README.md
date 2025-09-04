@@ -17,11 +17,12 @@
 const logger = await Logger.create({
   path: './log', // absolute or relative path
   workerId: 7, // mark for process or thread
-  writeInterval: 3000, // flush log to disk interval
-  writeBuffer: 64 * 1024, // buffer size (default 64kb)
-  keepDays: 5, // delete after N days, 0 - disable
+  writeInterval: 3000, // flush log to disk interval (default: 3s)
+  writeBuffer: 64 * 1024, // buffer size (default: 64kb)
+  keepDays: 5, // delete after N days, 0 - disable (default: 1)
   home: process.cwd(), // remove substring from paths
-  json: false, // print logs in JSON format, by default false
+  json: false, // print logs in JSON format (default: false)
+  crash: 'flush', // crash handling: 'flush' to flush buffer on exit (optional)
 });
 
 const { console } = logger;

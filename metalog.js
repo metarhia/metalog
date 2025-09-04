@@ -184,32 +184,42 @@ class Console {
 }
 
 class Logger extends events.EventEmitter {
+  active = false;
+  workerId = 'W0';
+  #createStream = fs.createWriteStream;
+  #writeInterval = DEFAULT_WRITE_INTERVAL;
+  #writeBuffer = DEFAULT_BUFFER_SIZE;
+  #keepDays = DEFAULT_KEEP_DAYS;
+  #stream = null;
+  #rotationTimer = null;
+  #flushTimer = null;
+  #flashing = false;
+  #buffers = [];
+  #bufferedBytes = 0;
+  #file = '';
+  #fsEnabled = false;
+  #json = false;
+  #toFile = null;
+  #toStdout = null;
+
   constructor(options) {
     super();
-    const { workerId = 0, createStream = fs.createWriteStream } = options;
-    const { writeInterval, writeBuffer, keepDays, home, json } = options;
-    const { toFile = LOG_TYPES, toStdout = LOG_TYPES, crash } = options;
-    this.active = false;
+    const { workerId, createStream } = options;
+    const { writeInterval, writeBuffer, keepDays, home, json, crash } = options;
+    const { toFile = LOG_TYPES, toStdout = LOG_TYPES } = options;
     this.path = options.path;
-    this.workerId = `W${workerId}`;
-    this.createStream = createStream;
-    this.writeInterval = writeInterval || DEFAULT_WRITE_INTERVAL;
-    this.writeBuffer = writeBuffer || DEFAULT_BUFFER_SIZE;
-    this.keepDays = keepDays || DEFAULT_KEEP_DAYS;
     this.home = home;
-    this.json = Boolean(json);
-    this.stream = null;
-    this.reopenTimer = null;
-    this.flushTimer = null;
-    this.lock = false;
-    this.buffer = [];
-    this.bufferLength = 0;
-    this.file = '';
-    this.toFile = logTypes(toFile);
-    this.fsEnabled = toFile.length !== 0;
-    this.toStdout = logTypes(toStdout);
     this.console = new Console((...args) => this.write(...args));
+    if (workerId) this.workerId = `W${workerId}`;
+    if (json) this.#json = true;
+    if (toFile) this.#toFile = logTypes(toFile);
+    if (toStdout) this.#toStdout = logTypes(toStdout);
+    if (createStream) this.#createStream = createStream;
+    if (writeInterval) this.#writeInterval = writeInterval;
+    if (writeBuffer) this.#writeBuffer = writeBuffer;
+    if (keepDays) this.#keepDays = keepDays;
     if (crash === 'flush') this.#setupCrashHandling();
+    this.#fsEnabled = toFile.length !== 0;
     return this.open();
   }
 
@@ -217,18 +227,22 @@ class Logger extends events.EventEmitter {
     return new Logger(options);
   }
 
+  get json() {
+    return this.#json;
+  }
+
   async open() {
     if (this.active) return this;
     this.active = true;
-    if (!this.fsEnabled) {
+    if (!this.#fsEnabled) {
       process.nextTick(() => this.emit('open'));
       return this;
     }
-    await this.createLogDir();
+    await this.#createLogDir();
     const fileName = metautil.nowDate() + '-' + this.workerId + '.log';
-    this.file = path.join(this.path, fileName);
+    this.#file = path.join(this.path, fileName);
     const nextReopen = getNextReopen();
-    this.reopenTimer = setTimeout(() => {
+    this.#rotationTimer = setTimeout(() => {
       this.once('close', () => {
         this.open();
       });
@@ -237,16 +251,17 @@ class Logger extends events.EventEmitter {
         this.emit('error', err);
       });
     }, nextReopen);
-    if (this.keepDays) await this.rotate();
-    this.stream = this.createStream(this.file, { flags: 'a' });
-    this.flushTimer = setInterval(() => {
+    if (this.#keepDays) await this.rotate();
+    this.#stream = this.#createStream(this.#file, { flags: 'a' });
+    this.#flushTimer = setInterval(() => {
       this.flush();
-    }, this.writeInterval);
-    this.stream.on('open', () => {
+    }, this.#writeInterval);
+    this.#stream.on('open', () => {
       this.emit('open');
     });
-    this.stream.on('error', () => {
-      this.emit('error', new Error(`Can't open log file: ${this.file}`));
+    this.#stream.on('error', () => {
+      const errorMsg = `Can't open log file: ${this.#file}`;
+      this.emit('error', new Error(errorMsg));
     });
     await events.once(this, 'open');
     return this;
@@ -254,12 +269,12 @@ class Logger extends events.EventEmitter {
 
   async close() {
     if (!this.active) return Promise.resolve();
-    if (!this.fsEnabled) {
+    if (!this.#fsEnabled) {
       this.active = false;
       this.emit('close');
       return Promise.resolve();
     }
-    const { stream } = this;
+    const stream = this.#stream;
     if (!stream || stream.destroyed || stream.closed) {
       return Promise.resolve();
     }
@@ -267,12 +282,12 @@ class Logger extends events.EventEmitter {
       this.flush((err) => {
         if (err) return void reject(err);
         this.active = false;
-        stream.end(() => {
-          clearInterval(this.flushTimer);
-          clearTimeout(this.reopenTimer);
-          this.flushTimer = null;
-          this.reopenTimer = null;
-          const fileName = this.file;
+        this.#stream.end(() => {
+          clearInterval(this.#flushTimer);
+          clearTimeout(this.#rotationTimer);
+          this.#flushTimer = null;
+          this.#rotationTimer = null;
+          const fileName = this.#file;
           this.emit('close');
           fs.stat(fileName, (err, stats) => {
             if (!err && stats.size === 0) {
@@ -300,7 +315,7 @@ class Logger extends events.EventEmitter {
   }
 
   async rotate() {
-    if (!this.keepDays) return;
+    if (!this.#keepDays) return;
     const now = nowDays();
     const finish = [];
     try {
@@ -308,7 +323,7 @@ class Logger extends events.EventEmitter {
       for (const fileName of files) {
         if (metautil.fileExt(fileName) !== 'log') continue;
         const fileAge = now - nameToDays(fileName);
-        if (fileAge < this.keepDays) continue;
+        if (fileAge < this.#keepDays) continue;
         finish.push(fsp.unlink(path.join(this.path, fileName)));
       }
       await Promise.all(finish);
@@ -363,30 +378,44 @@ class Logger extends events.EventEmitter {
     return JSON.stringify(log);
   }
 
+  #createLogDir() {
+    return new Promise((resolve, reject) => {
+      fs.access(this.path, (err) => {
+        if (!err) resolve();
+        fs.mkdir(this.path, (err) => {
+          if (!err || err.code === 'EEXIST') return void resolve();
+          const error = new Error(`Can not create directory: ${this.path}\n`);
+          this.emit('error', error);
+          reject();
+        });
+      });
+    });
+  }
+
   write(type, indent, ...args) {
-    if (this.toStdout[type]) {
-      const line = this.json
-        ? this.formatJson(type, indent, ...args)
-        : this.formatPretty(type, indent, ...args);
+    if (this.#toStdout[type]) {
+      const line = this.#json
+        ? this.#formatJson(type, indent, ...args)
+        : this.#formatPretty(type, indent, ...args);
       process.stdout.write(line + '\n');
     }
-    if (this.toFile[type]) {
-      const line = this.json
-        ? this.formatJson(type, indent, ...args)
-        : this.formatFile(type, indent, ...args);
+    if (this.#toFile[type]) {
+      const line = this.#json
+        ? this.#formatJson(type, indent, ...args)
+        : this.#formatFile(type, indent, ...args);
       const buffer = Buffer.from(line + '\n');
-      this.buffer.push(buffer);
-      this.bufferLength += buffer.length;
-      if (this.bufferLength >= this.writeBuffer) this.flush();
+      this.#buffers.push(buffer);
+      this.#bufferedBytes += buffer.length;
+      if (this.#bufferedBytes >= this.#writeBuffer) this.flush();
     }
   }
 
   flush(callback) {
-    if (this.lock) {
+    if (this.#flashing) {
       if (callback) this.once('unlocked', callback);
       return;
     }
-    if (this.buffer.length === 0) {
+    if (this.#bufferedBytes === 0) {
       if (callback) callback();
       return;
     }
@@ -396,34 +425,80 @@ class Logger extends events.EventEmitter {
       if (callback) callback(err);
       return;
     }
-    if (!this.stream || this.stream.destroyed || this.stream.closed) {
+    const stream = this.#stream;
+    if (!stream || stream.destroyed || stream.closed) {
       const err = new Error('Cannot flush log buffer: stream is not available');
       this.emit('error', err);
       if (callback) callback(err);
       return;
     }
-    this.lock = true;
-    const buffer = Buffer.concat(this.buffer);
-    this.buffer.length = 0;
-    this.bufferLength = 0;
-    this.stream.write(buffer, () => {
-      this.lock = false;
+    this.#flashing = true;
+    const buffer = Buffer.concat(this.#buffers);
+    this.#buffers.length = 0;
+    this.#bufferedBytes = 0;
+    this.#stream.write(buffer, () => {
+      this.#flashing = false;
       this.emit('unlocked');
       if (callback) callback();
     });
   }
 
-  normalizeStack(stack) {
+  #format(type, indent, ...args) {
+    const normalize = type === 'error' || type === 'debug';
+    const s = `${' '.repeat(indent)}${util.format(...args)}`;
+    return normalize ? this.#normalizeStack(s) : s;
+  }
+
+  #formatPretty(type, indent, ...args) {
+    const dateTime = new Date().toISOString();
+    const message = this.#format(type, indent, ...args);
+    const normalColor = TEXT_COLOR[type];
+    const markColor = TYPE_COLOR[type];
+    const time = normalColor(dateTime.substring(TIME_START, TIME_END));
+    const id = normalColor(this.workerId);
+    const mark = markColor(' ' + type.padEnd(TYPE_LENGTH));
+    const msg = normalColor(message);
+    return `${time}  ${id}  ${mark}  ${msg}`;
+  }
+
+  #formatFile(type, indent, ...args) {
+    const dateTime = new Date().toISOString();
+    const message = this.#format(type, indent, ...args);
+    const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
+    return `${dateTime} [${type}] ${msg}`;
+  }
+
+  #formatJson(type, indent, ...args) {
+    const log = {
+      timestamp: new Date().toISOString(),
+      workerId: this.workerId,
+      level: type,
+      message: null,
+    };
+    if (metautil.isError(args[0])) {
+      log.err = this.#expandError(args[0]);
+      args = args.slice(1);
+    } else if (typeof args[0] === 'object') {
+      Object.assign(log, args[0]);
+      if (metautil.isError(log.err)) log.err = this.#expandError(log.err);
+      if (metautil.isError(log.error)) log.error = this.#expandError(log.error);
+      args = args.slice(1);
+    }
+    log.message = util.format(...args);
+    return JSON.stringify(log);
+  }
+
+  #normalizeStack(stack) {
     if (!stack) return 'no data to log';
     let res = metautil.replace(stack, STACK_AT, '');
     if (this.home) res = metautil.replace(res, this.home, '');
     return res;
   }
 
-  expandError(err) {
+  #expandError(err) {
     return {
       message: err.message,
-      stack: this.normalizeStack(err.stack),
+      stack: this.#normalizeStack(err.stack),
       ...err,
     };
   }
