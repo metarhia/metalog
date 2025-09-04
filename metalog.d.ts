@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { Console } from 'node:console';
 
 interface LoggerOptions {
   path: string;
@@ -12,27 +13,6 @@ interface LoggerOptions {
   toFile?: Array<string>;
   toStdout?: Array<string>;
   crash?: string;
-}
-
-interface Console {
-  assert(assertion: unknown, ...args: unknown[]): void;
-  clear(): void;
-  count(label?: string): void;
-  countReset(label?: string): void;
-  debug(...args: unknown[]): void;
-  dir(...args: unknown[]): void;
-  trace(...args: unknown[]): void;
-  info(...args: unknown[]): void;
-  log(...args: unknown[]): void;
-  warn(...args: unknown[]): void;
-  error(...args: unknown[]): void;
-  group(...args: unknown[]): void;
-  groupCollapsed(...args: unknown[]): void;
-  groupEnd(): void;
-  table(tabularData: unknown): void;
-  time(label?: string): void;
-  timeEnd(label?: string): void;
-  timeLog(label: string, ...args: unknown[]): void;
 }
 
 export class Logger extends EventEmitter {
