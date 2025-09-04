@@ -56,10 +56,12 @@ export class Logger extends EventEmitter {
   fsEnabled: boolean;
   toStdout: Record<string, boolean>;
   console: Console;
-  constructor(args: LoggerOptions);
-  createLogDir(): Promise<void>;
+
+  constructor(options: LoggerOptions);
+  static create(options: LoggerOptions): Promise<Logger>;
   open(): Promise<Logger>;
   close(): Promise<void>;
+  createLogDir(): Promise<void>;
   rotate(): Promise<void>;
   format(type: string, indent: number, ...args: unknown[]): string;
   formatPretty(type: string, indent: number, ...args: unknown[]): string;
@@ -70,5 +72,3 @@ export class Logger extends EventEmitter {
   normalizeStack(stack: string): string;
   expandError(err: Error): unknown;
 }
-
-export function openLog(args: LoggerOptions): Promise<Logger>;

@@ -14,7 +14,7 @@
 ## Usage
 
 ```js
-const logger = await metalog.openLog({
+const logger = await Logger.create({
   path: './log', // absolute or relative path
   workerId: 7, // mark for process or thread
   writeInterval: 3000, // flush log to disk interval

@@ -1,10 +1,10 @@
 'use strict';
 
 const test = require('node:test');
-const metalog = require('..');
+const { Logger } = require('..');
 
 const createLogger = () =>
-  metalog.openLog({
+  Logger.create({
     path: './log',
     workerId: 3,
     writeInterval: 3000,
