@@ -2,6 +2,17 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.17][] - 2025-09-04
+
+- Consolidate test files: `console.js` and `json.js` to eliminate code duplication
+- Remove node 21 and 23 from CI, set engines: >=18
+- Update dependencies
+- Fix TypeScript typings:
+  - add missing properties and methods
+  - add constructor option: `crash`
+  - add complete `Console` interface with all available methods
+  - use `unknown` instead of `any` for better type safety
+
 ## [3.1.16][] - 2025-06-05
 
 - Add node.js 23 and 24 to CI
@@ -114,7 +125,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.16...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.17...HEAD
+[3.1.17]: https://github.com/metarhia/metalog/compare/v3.1.16...v3.1.17
 [3.1.16]: https://github.com/metarhia/metalog/compare/v3.1.15...v3.1.16
 [3.1.15]: https://github.com/metarhia/metalog/compare/v3.1.14...v3.1.15
 [3.1.14]: https://github.com/metarhia/metalog/compare/v3.1.13...v3.1.14
