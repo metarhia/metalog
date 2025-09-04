@@ -2,16 +2,7 @@
 
 const metalog = require('..');
 
-(async () => {
-  const logger = await metalog.openLog({
-    path: './log',
-    workerId: 7,
-    writeInterval: 3000,
-    writeBuffer: 64 * 1024,
-    keepDays: 5,
-    home: process.cwd(),
-  });
-
+const testConsoleMethods = async (logger) => {
   const { console } = logger;
   console.clear();
   console.assert(true, 'Assert message: passed');
@@ -36,6 +27,35 @@ const metalog = require('..');
   console.timeLog('time-label', 'Test log message for console.timeLog');
   console.trace('Test log message for console.trace', 'arg2');
   console.warn('Test log message for console.warn', 'arg2');
+};
 
-  logger.close();
-})();
+const run = async () => {
+  console.log('Testing regular logging mode...');
+  const logger = await metalog.openLog({
+    path: './log',
+    workerId: 7,
+    writeInterval: 3000,
+    writeBuffer: 64 * 1024,
+    keepDays: 5,
+    home: process.cwd(),
+  });
+
+  await testConsoleMethods(logger);
+  await logger.close();
+
+  console.log('\nTesting JSON logging mode...');
+  const jsonLogger = await metalog.openLog({
+    path: './log',
+    workerId: 7,
+    writeInterval: 3000,
+    writeBuffer: 64 * 1024,
+    keepDays: 5,
+    home: process.cwd(),
+    json: true,
+  });
+
+  await testConsoleMethods(jsonLogger);
+  await jsonLogger.close();
+};
+
+run();
