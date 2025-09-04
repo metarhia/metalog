@@ -14,7 +14,7 @@ const createLogger = () =>
     home: process.cwd(),
   });
 
-(async () => {
+const run = async () => {
   const logger1 = await createLogger();
   const { console } = logger1;
 
@@ -124,4 +124,6 @@ const createLogger = () =>
     if (msg.includes(dir)) throw new Error('Path truncation error');
     await logger.close();
   });
-})();
+};
+
+run();
