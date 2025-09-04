@@ -5,7 +5,7 @@ const fsp = fs.promises;
 const path = require('node:path');
 const util = require('node:util');
 const events = require('node:events');
-const readline = require('node:readline');
+const { Console } = require('node:console');
 const metautil = require('metautil');
 const concolor = require('concolor');
 
@@ -16,7 +16,6 @@ const DEFAULT_KEEP_DAYS = 1;
 const STACK_AT = '  at ';
 const TYPE_LENGTH = 6;
 const LINE_SEPARATOR = ';';
-const INDENT = 2;
 const DATE_LEN = 'YYYY-MM-DD'.length;
 const TIME_START = DATE_LEN + 1;
 const TIME_END = TIME_START + 'HH:MM:SS'.length;
@@ -77,115 +76,10 @@ const getNextReopen = () => {
   return nextDate - curTime + DAY_MILLISECONDS;
 };
 
-class Console {
-  #write;
-  #groupIndent = 0;
-  #counts = new Map();
-  #times = new Map();
-  #readline = readline;
-
-  constructor(write) {
-    this.#write = write;
-  }
-
-  assert(assertion, ...args) {
-    if (!assertion) {
-      const noArgs = args.length === 0;
-      const message = noArgs ? 'Assertion failed' : util.format(...args);
-      this.#write('error', this.#groupIndent, message);
-    }
-  }
-
-  clear() {
-    this.#readline.cursorTo(process.stdout, 0, 0);
-    this.#readline.clearScreenDown(process.stdout);
-  }
-
-  count(label = 'default') {
-    let cnt = this.#counts.get(label) || 0;
-    cnt++;
-    this.#counts.set(label, cnt);
-    this.#write('debug', this.#groupIndent, `${label}: ${cnt}`);
-  }
-
-  countReset(label = 'default') {
-    this.#counts.delete(label);
-  }
-
-  debug(...args) {
-    this.#write('debug', this.#groupIndent, ...args);
-  }
-
-  dir(...args) {
-    this.#write('debug', this.#groupIndent, ...args);
-  }
-
-  trace(...args) {
-    const msg = util.format(...args);
-    const err = new Error(msg);
-    this.#write('debug', this.#groupIndent, `Trace${err.stack}`);
-  }
-
-  info(...args) {
-    this.#write('info', this.#groupIndent, ...args);
-  }
-
-  log(...args) {
-    this.#write('log', this.#groupIndent, ...args);
-  }
-
-  warn(...args) {
-    this.#write('warn', this.#groupIndent, ...args);
-  }
-
-  error(...args) {
-    this.#write('error', this.#groupIndent, ...args);
-  }
-
-  group(...args) {
-    if (args.length !== 0) this.log(...args);
-    this.#groupIndent += INDENT;
-  }
-
-  groupCollapsed(...args) {
-    this.group(...args);
-  }
-
-  groupEnd() {
-    if (this.#groupIndent === 0) return;
-    this.#groupIndent -= INDENT;
-  }
-
-  table(tabularData) {
-    this.#write('log', 0, JSON.stringify(tabularData));
-  }
-
-  time(label = 'default') {
-    this.#times.set(label, process.hrtime());
-  }
-
-  timeEnd(label = 'default') {
-    const startTime = this.#times.get(label);
-    const totalTime = process.hrtime(startTime);
-    const totalTimeMs = totalTime[0] * 1e3 + totalTime[1] / 1e6;
-    this.timeLog(label, `${label}: ${totalTimeMs}ms`);
-    this.#times.delete(label);
-  }
-
-  timeLog(label, ...args) {
-    const startTime = this.#times.get(label);
-    if (startTime === undefined) {
-      const msg = `Warning: No such label '${label}'`;
-      this.#write('warn', this.#groupIndent, msg);
-      return;
-    }
-    this.#write('debug', this.#groupIndent, ...args);
-  }
-}
-
 class Logger extends events.EventEmitter {
   active = false;
   workerId = 'W0';
+  console = null;
   #createStream = fs.createWriteStream;
   #writeInterval = DEFAULT_WRITE_INTERVAL;
   #writeBuffer = DEFAULT_BUFFER_SIZE;
@@ -209,7 +103,6 @@ class Logger extends events.EventEmitter {
     const { toFile = LOG_TYPES, toStdout = LOG_TYPES } = options;
     this.path = options.path;
     this.home = home;
-    this.console = new Console((...args) => this.write(...args));
     if (workerId) this.workerId = `W${workerId}`;
     if (json) this.#json = true;
     if (toFile) this.#toFile = logTypes(toFile);
@@ -253,6 +146,7 @@ class Logger extends events.EventEmitter {
     }, nextReopen);
     if (this.#keepDays) await this.rotate();
     this.#stream = this.#createStream(this.#file, { flags: 'a' });
+    this.console = new Console({ stdout: this.#stream, stderr: this.#stream });
     this.#flushTimer = setInterval(() => {
       this.flush();
     }, this.#writeInterval);
@@ -295,20 +189,6 @@ class Logger extends events.EventEmitter {
             }
             resolve();
           });
-        });
-      });
-    });
-  }
-
-  createLogDir() {
-    return new Promise((resolve, reject) => {
-      fs.access(this.path, (err) => {
-        if (!err) resolve();
-        fs.mkdir(this.path, (err) => {
-          if (!err || err.code === 'EEXIST') return void resolve();
-          const error = new Error(`Can not create directory: ${this.path}\n`);
-          this.emit('error', error);
-          reject();
         });
       });
     });
