@@ -184,13 +184,13 @@ class Console {
 }
 
 class Logger extends events.EventEmitter {
-  constructor(args) {
+  constructor(options) {
     super();
-    const { workerId = 0, createStream = fs.createWriteStream } = args;
-    const { writeInterval, writeBuffer, keepDays, home, json } = args;
-    const { toFile = LOG_TYPES, toStdout = LOG_TYPES } = args;
+    const { workerId = 0, createStream = fs.createWriteStream } = options;
+    const { writeInterval, writeBuffer, keepDays, home, json } = options;
+    const { toFile = LOG_TYPES, toStdout = LOG_TYPES, crash } = options;
     this.active = false;
-    this.path = args.path;
+    this.path = options.path;
     this.workerId = `W${workerId}`;
     this.createStream = createStream;
     this.writeInterval = writeInterval || DEFAULT_WRITE_INTERVAL;
@@ -209,6 +209,7 @@ class Logger extends events.EventEmitter {
     this.fsEnabled = toFile.length !== 0;
     this.toStdout = logTypes(toStdout);
     this.console = new Console((...args) => this.write(...args));
+    if (crash === 'flush') this.#setupCrashHandling();
     return this.open();
   }
 
@@ -386,7 +387,13 @@ class Logger extends events.EventEmitter {
       return;
     }
     if (!this.active) {
-      const err = new Error('Cannot flush log buffer: logger is not opened');
+      const err = new Error('Cannot flush log buffer: logger is not active');
+      this.emit('error', err);
+      if (callback) callback(err);
+      return;
+    }
+    if (!this.stream || this.stream.destroyed || this.stream.closed) {
+      const err = new Error('Cannot flush log buffer: stream is not available');
       this.emit('error', err);
       if (callback) callback(err);
       return;
@@ -416,8 +423,29 @@ class Logger extends events.EventEmitter {
       ...err,
     };
   }
+
+  #setupCrashHandling() {
+    const exitHandler = () => {
+      this.flush();
+    };
+    process.on('SIGTERM', exitHandler);
+    process.on('SIGINT', exitHandler);
+    process.on('SIGUSR1', exitHandler);
+    process.on('SIGUSR2', exitHandler);
+    process.on('uncaughtException', (err) => {
+      this.write('error', 0, 'Uncaught Exception:', err);
+      this.flush();
+    });
+    process.on('unhandledRejection', (reason) => {
+      this.write('error', 0, 'Unhandled Rejection:', reason);
+      this.flush();
+    });
+    process.on('exit', () => {
+      this.flush();
+    });
+  }
 }
 
-const openLog = async (args) => new Logger(args);
+const openLog = async (options) => new Logger(options);
 
 module.exports = { Logger, openLog };
