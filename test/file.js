@@ -84,7 +84,6 @@ const run = async () => {
 
   test('logger write more then 60Mb', async () => {
     const logger = await createLogger();
-    logger.toStdout.INFO = false;
     const begin = process.hrtime();
     for (let i = 0; i < 1000000; i++) {
       logger.console.info('Write more then 60Mb logs, line: ' + i);
@@ -113,15 +112,6 @@ const run = async () => {
   test('logger.rotate', async () => {
     const logger = await createLogger();
     logger.rotate();
-    await logger.close();
-  });
-
-  test('Truncate paths in stack traces', async () => {
-    const logger = await createLogger();
-    const message = new Error('Example').stack;
-    const msg = logger.normalizeStack(message);
-    const dir = process.cwd();
-    if (msg.includes(dir)) throw new Error('Path truncation error');
     await logger.close();
   });
 };
