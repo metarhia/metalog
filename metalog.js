@@ -89,10 +89,10 @@ class Console {
   }
 
   assert(assertion, ...args) {
-    try {
-      console.assert(assertion, ...args);
-    } catch (err) {
-      this.#write('error', this.#groupIndent, err.stack);
+    if (!assertion) {
+      const noArgs = args.length === 0;
+      const message = noArgs ? 'Assertion failed' : util.format(...args);
+      this.#write('error', this.#groupIndent, message);
     }
   }
 
@@ -152,7 +152,7 @@ class Console {
   }
 
   groupEnd() {
-    if (this.#groupIndent.length === 0) return;
+    if (this.#groupIndent === 0) return;
     this.#groupIndent -= INDENT;
   }
 
