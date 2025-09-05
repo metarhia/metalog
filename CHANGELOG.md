@@ -2,6 +2,12 @@
 
 ## [Unreleased][unreleased]
 
+- Enhanced Console class with full Node.js API compatibility:
+  - Added `console.dirxml()` method
+  - Enhanced `console.dir()` to support options parameter
+  - Enhanced `console.table()` to support properties parameter
+  - Fixed `console.timeLog()` to properly calculate elapsed time
+
 ## [3.1.17][] - 2025-09-04
 
 - Consolidate test files: `console.js` and `json.js` to eliminate code duplication

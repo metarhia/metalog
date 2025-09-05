@@ -1,5 +1,4 @@
 import { EventEmitter } from 'node:events';
-import { Console } from 'node:console';
 
 interface LoggerOptions {
   path: string;
@@ -15,6 +14,28 @@ interface LoggerOptions {
   crash?: string;
 }
 
+interface Console {
+  assert(value: unknown, ...message: unknown[]): void;
+  clear(): void;
+  count(label?: string): void;
+  countReset(label?: string): void;
+  debug(data: unknown, ...args: unknown[]): void;
+  dir(obj: unknown, options?: unknown): void;
+  dirxml(...data: unknown[]): void;
+  error(data?: unknown, ...args: unknown[]): void;
+  group(...label: unknown[]): void;
+  groupCollapsed(...label: unknown[]): void;
+  groupEnd(): void;
+  info(data?: unknown, ...args: unknown[]): void;
+  log(data?: unknown, ...args: unknown[]): void;
+  table(tabularData: unknown, properties?: string[]): void;
+  time(label?: string): void;
+  timeEnd(label?: string): void;
+  timeLog(label?: string, ...data: unknown[]): void;
+  trace(message?: unknown, ...args: unknown[]): void;
+  warn(data?: unknown, ...args: unknown[]): void;
+}
+
 export class Logger extends EventEmitter {
   active: boolean;
   path: string;
@@ -28,7 +49,7 @@ export class Logger extends EventEmitter {
   open(): Promise<Logger>;
   close(): Promise<void>;
   rotate(): Promise<void>;
-  write(type: string, indent: number, ...args: unknown[]): void;
+  write(type: string, indent: number, args: unknown[]): void;
   flush(callback?: (err?: Error) => void): void;
 
   #createStream: () => NodeJS.WritableStream;
@@ -47,7 +68,7 @@ export class Logger extends EventEmitter {
   #toFile: Record<string, boolean>;
   #toStdout: Record<string, boolean>;
 
-  #createLogDir(): Promise<void>;
+  #createDir(): Promise<void>;
   #format(type: string, indent: number, ...args: unknown[]): string;
   #formatPretty(type: string, indent: number, ...args: unknown[]): string;
   #formatFile(type: string, indent: number, ...args: unknown[]): string;

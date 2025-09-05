@@ -26,9 +26,68 @@ const logger = await Logger.create({
 });
 
 const { console } = logger;
+
 console.log('Test message');
+console.info('Info message');
+console.warn('Warning message');
+console.error('Error message');
+console.debug('Debug message');
+
+console.assert(true, 'Assertion passed');
+console.assert(false, 'Assertion failed');
+console.count('counter');
+console.count('counter');
+console.countReset('counter');
+
+console.time('operation');
+// ... some operation ...
+console.timeEnd('operation');
+console.timeLog('operation', 'Checkpoint');
+
+console.group('Group 1');
+console.log('Nested message');
+console.groupCollapsed('Group 2');
+console.log('Collapsed group message');
+console.groupEnd();
+console.groupEnd();
+
+console.dir({ key: 'value' });
+console.dirxml('<div>HTML content</div>');
+console.table([
+  { name: 'John', age: 30 },
+  { name: 'Jane', age: 25 },
+]);
+
+console.trace('Trace message');
+
 await logger.close();
 ```
+
+## Console API Compatibility
+
+Metalog provides a fully compatible console implementation that supports all Node.js console methods:
+
+- `console.log([data][, ...args])` - General logging
+- `console.info([data][, ...args])` - Informational messages
+- `console.warn([data][, ...args])` - Warning messages
+- `console.error([data][, ...args])` - Error messages
+- `console.debug([data][, ...args])` - Debug messages
+- `console.assert(value[, ...message])` - Assertion testing
+- `console.clear()` - Clear the console
+- `console.count([label])` - Count occurrences
+- `console.countReset([label])` - Reset counter
+- `console.dir(obj[, options])` - Object inspection
+- `console.dirxml(...data)` - XML/HTML inspection
+- `console.group([...label])` - Start group
+- `console.groupCollapsed()` - Start collapsed group
+- `console.groupEnd()` - End group
+- `console.table(tabularData[, properties])` - Table display
+- `console.time([label])` - Start timer
+- `console.timeEnd([label])` - End timer
+- `console.timeLog([label][, ...data])` - Log timer value
+- `console.trace([message][, ...args])` - Stack trace
+
+All methods maintain the same behavior as Node.js native console, with output routed through the metalog system for consistent formatting and file logging.
 
 ## License & Contributors
 

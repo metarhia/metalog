@@ -4,13 +4,13 @@ const { Logger } = require('..');
 
 const testConsoleMethods = async (logger) => {
   const { console } = logger;
-  console.clear();
   console.assert(true, 'Assert message: passed');
   console.assert(false, 'Assert message: not passed');
   console.count('count-label');
   console.countReset('count-label');
   console.debug('Test log message for console.debug', 'arg2');
   console.dir('Test log message for console.dir', 'arg2');
+  console.dirxml('Test log message for console.dirxml', 'arg2');
   const err = new Error('Test log message for console.error');
   console.error(err);
   console.group('Test log message for console.group', 'arg2');
