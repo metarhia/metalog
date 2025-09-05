@@ -5,7 +5,7 @@ const fsp = fs.promises;
 const path = require('node:path');
 const util = require('node:util');
 const events = require('node:events');
-const { Console } = require('node:console');
+const readline = require('node:readline');
 const metautil = require('metautil');
 const concolor = require('concolor');
 
@@ -16,6 +16,7 @@ const DEFAULT_KEEP_DAYS = 1;
 const STACK_AT = '  at ';
 const TYPE_LENGTH = 6;
 const LINE_SEPARATOR = ';';
+const INDENT = 2;
 const DATE_LEN = 'YYYY-MM-DD'.length;
 const TIME_START = DATE_LEN + 1;
 const TIME_END = TIME_START + 'HH:MM:SS'.length;
@@ -76,10 +77,141 @@ const getNextReopen = () => {
   return nextDate - curTime + DAY_MILLISECONDS;
 };
 
+class Console {
+  #logger;
+  #groupIndent = 0;
+  #counts = new Map();
+  #times = new Map();
+  #readline = readline;
+
+  constructor(logger) {
+    this.#logger = logger;
+  }
+
+  assert(assertion, ...args) {
+    if (!assertion) {
+      const noArgs = args.length === 0;
+      const message = noArgs ? 'Assertion failed' : util.format(...args);
+      this.#logger.write('error', this.#groupIndent, [message]);
+    }
+  }
+
+  clear() {
+    this.#readline.cursorTo(process.stdout, 0, 0);
+    this.#readline.clearScreenDown(process.stdout);
+  }
+
+  count(label = 'default') {
+    let cnt = this.#counts.get(label) || 0;
+    cnt++;
+    this.#counts.set(label, cnt);
+    this.#logger.write('debug', this.#groupIndent, [`${label}: ${cnt}`]);
+  }
+
+  countReset(label = 'default') {
+    this.#counts.delete(label);
+  }
+
+  debug(...args) {
+    this.#logger.write('debug', this.#groupIndent, args);
+  }
+
+  dir(obj, options) {
+    const inspected = util.inspect(obj, options);
+    this.#logger.write('debug', this.#groupIndent, [inspected]);
+  }
+
+  dirxml(...data) {
+    this.#logger.write('debug', this.#groupIndent, data);
+  }
+
+  trace(...args) {
+    const msg = util.format(...args);
+    const err = new Error(msg);
+    this.#logger.write('debug', this.#groupIndent, [`Trace${err.stack}`]);
+  }
+
+  info(...args) {
+    this.#logger.write('info', this.#groupIndent, args);
+  }
+
+  log(...args) {
+    this.#logger.write('log', this.#groupIndent, args);
+  }
+
+  warn(...args) {
+    this.#logger.write('warn', this.#groupIndent, args);
+  }
+
+  error(...args) {
+    this.#logger.write('error', this.#groupIndent, args);
+  }
+
+  group(...args) {
+    if (args.length !== 0) this.log(...args);
+    this.#groupIndent += INDENT;
+  }
+
+  groupCollapsed(...args) {
+    this.group(...args);
+  }
+
+  groupEnd() {
+    if (this.#groupIndent === 0) return;
+    this.#groupIndent -= INDENT;
+  }
+
+  table(tabularData, properties) {
+    if (properties) {
+      const filtered = Array.isArray(tabularData)
+        ? tabularData.map((item) => {
+            const filteredItem = {};
+            for (const prop of properties) {
+              if (Object.prototype.hasOwnProperty.call(item, prop)) {
+                filteredItem[prop] = item[prop];
+              }
+            }
+            return filteredItem;
+          })
+        : tabularData;
+      const opts = { showHidden: false, depth: null, colors: false };
+      this.#logger.write('log', 0, [util.inspect(filtered, opts)]);
+    } else {
+      const opts = { showHidden: false, depth: null, colors: false };
+      this.#logger.write('log', 0, [util.inspect(tabularData, opts)]);
+    }
+  }
+
+  time(label = 'default') {
+    this.#times.set(label, process.hrtime());
+  }
+
+  timeEnd(label = 'default') {
+    const startTime = this.#times.get(label);
+    const totalTime = process.hrtime(startTime);
+    const totalTimeMs = totalTime[0] * 1e3 + totalTime[1] / 1e6;
+    this.timeLog(label, `${label}: ${totalTimeMs}ms`);
+    this.#times.delete(label);
+  }
+
+  timeLog(label = 'default', ...data) {
+    const startTime = this.#times.get(label);
+    if (startTime === undefined) {
+      const msg = `Warning: No such label '${label}'`;
+      this.#logger.write('warn', this.#groupIndent, [msg]);
+      return;
+    }
+    const totalTime = process.hrtime(startTime);
+    const totalTimeMs = totalTime[0] * 1e3 + totalTime[1] / 1e6;
+    const message = data.length > 0 ? util.format(...data) : '';
+    const output = `${label}: ${totalTimeMs}ms${message ? ' ' + message : ''}`;
+    this.#logger.write('debug', this.#groupIndent, [output]);
+  }
+}
+
 class Logger extends events.EventEmitter {
   active = false;
   workerId = 'W0';
-  console = null;
   #createStream = fs.createWriteStream;
   #writeInterval = DEFAULT_WRITE_INTERVAL;
   #writeBuffer = DEFAULT_BUFFER_SIZE;
@@ -103,6 +235,7 @@ class Logger extends events.EventEmitter {
     const { toFile = LOG_TYPES, toStdout = LOG_TYPES } = options;
     this.path = options.path;
     this.home = home;
+    this.console = new Console(this);
     if (workerId) this.workerId = `W${workerId}`;
     if (json) this.#json = true;
     if (toFile) this.#toFile = logTypes(toFile);
@@ -131,7 +264,7 @@ class Logger extends events.EventEmitter {
       process.nextTick(() => this.emit('open'));
       return this;
     }
-    await this.#createLogDir();
+    await this.#createDir();
     const fileName = metautil.nowDate() + '-' + this.workerId + '.log';
     this.#file = path.join(this.path, fileName);
     const nextReopen = getNextReopen();
@@ -146,7 +279,6 @@ class Logger extends events.EventEmitter {
     }, nextReopen);
     if (this.#keepDays) await this.rotate();
     this.#stream = this.#createStream(this.#file, { flags: 'a' });
-    this.console = new Console({ stdout: this.#stream, stderr: this.#stream });
     this.#flushTimer = setInterval(() => {
       this.flush();
     }, this.#writeInterval);
@@ -213,52 +345,7 @@ class Logger extends events.EventEmitter {
     }
   }
 
-  format(type, indent, ...args) {
-    const normalize = type === 'error' || type === 'debug';
-    const s = `${' '.repeat(indent)}${util.format(...args)}`;
-    return normalize ? this.normalizeStack(s) : s;
-  }
-
-  formatPretty(type, indent, ...args) {
-    const dateTime = new Date().toISOString();
-    const message = this.format(type, indent, ...args);
-    const normalColor = TEXT_COLOR[type];
-    const markColor = TYPE_COLOR[type];
-    const time = normalColor(dateTime.substring(TIME_START, TIME_END));
-    const id = normalColor(this.workerId);
-    const mark = markColor(' ' + type.padEnd(TYPE_LENGTH));
-    const msg = normalColor(message);
-    return `${time}  ${id}  ${mark}  ${msg}`;
-  }
-
-  formatFile(type, indent, ...args) {
-    const dateTime = new Date().toISOString();
-    const message = this.format(type, indent, ...args);
-    const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
-    return `${dateTime} [${type}] ${msg}`;
-  }
-
-  formatJson(type, indent, ...args) {
-    const log = {
-      timestamp: new Date().toISOString(),
-      workerId: this.workerId,
-      level: type,
-      message: null,
-    };
-    if (metautil.isError(args[0])) {
-      log.err = this.expandError(args[0]);
-      args = args.slice(1);
-    } else if (typeof args[0] === 'object') {
-      Object.assign(log, args[0]);
-      if (metautil.isError(log.err)) log.err = this.expandError(log.err);
-      if (metautil.isError(log.error)) log.error = this.expandError(log.error);
-      args = args.slice(1);
-    }
-    log.message = util.format(...args);
-    return JSON.stringify(log);
-  }
-
-  #createLogDir() {
+  #createDir() {
     return new Promise((resolve, reject) => {
       fs.access(this.path, (err) => {
         if (!err) resolve();
@@ -272,7 +359,7 @@ class Logger extends events.EventEmitter {
     });
   }
 
-  write(type, indent, ...args) {
+  write(type, indent, args) {
     if (this.#toStdout[type]) {
       const line = this.#json
         ? this.#formatJson(type, indent, ...args)
@@ -392,11 +479,11 @@ class Logger extends events.EventEmitter {
     process.on('SIGUSR1', exitHandler);
     process.on('SIGUSR2', exitHandler);
     process.on('uncaughtException', (err) => {
-      this.write('error', 0, 'Uncaught Exception:', err);
+      this.write('error', 0, ['Uncaught Exception:', err]);
       this.flush();
     });
     process.on('unhandledRejection', (reason) => {
-      this.write('error', 0, 'Unhandled Rejection:', reason);
+      this.write('error', 0, ['Unhandled Rejection:', reason]);
       this.flush();
     });
     process.on('exit', () => {
