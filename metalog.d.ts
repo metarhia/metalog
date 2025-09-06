@@ -14,7 +14,39 @@ interface LoggerOptions {
   crash?: string;
 }
 
-interface Console {
+interface BufferedStreamOptions {
+  stream?: NodeJS.WritableStream;
+  writeBuffer?: number;
+  flushInterval?: number;
+}
+
+interface FormatterOptions {
+  json?: boolean;
+  workerId?: string;
+  home?: string;
+}
+
+export class BufferedStream extends EventEmitter {
+  constructor(options?: BufferedStreamOptions);
+  write(buffer: Buffer): void;
+  flush(callback?: (error?: Error) => void): void;
+  close(): Promise<void>;
+  startFlushTimer(): void;
+  stopFlushTimer(): void;
+}
+
+export class Formatter {
+  constructor(options?: FormatterOptions);
+  format(type: string, indent: number, args: unknown[]): string;
+  formatPretty(type: string, indent: number, args: unknown[]): string;
+  formatFile(type: string, indent: number, args: unknown[]): string;
+  formatJson(type: string, indent: number, args: unknown[]): string;
+  normalizeStack(stack: string): string;
+  expandError(error: Error): unknown;
+}
+
+export class Console {
+  constructor(logger: Logger);
   assert(value: unknown, ...message: unknown[]): void;
   clear(): void;
   count(label?: string): void;
@@ -50,29 +82,25 @@ export class Logger extends EventEmitter {
   close(): Promise<void>;
   rotate(): Promise<void>;
   write(type: string, indent: number, args: unknown[]): void;
-  flush(callback?: (err?: Error) => void): void;
+  flush(callback?: (error?: Error) => void): void;
 
   #createStream: () => NodeJS.WritableStream;
   #writeInterval: number;
   #writeBuffer: number;
   #keepDays: number;
-  #stream: NodeJS.WritableStream;
-  #rotationTimer: NodeJS.Timer;
-  #flushTimer: NodeJS.Timer;
-  #flashing: boolean;
-  #buffers: Array<Buffer>;
-  #bufferedBytes: number;
+  #stream: NodeJS.WritableStream | null;
+  #rotationTimer: NodeJS.Timer | null;
   #file: string;
   #fsEnabled: boolean;
   #json: boolean;
-  #toFile: Record<string, boolean>;
-  #toStdout: Record<string, boolean>;
+  #toFile: Record<string, boolean> | null;
+  #toStdout: Record<string, boolean> | null;
+  #buffer: BufferedStream | null;
+  #formatter: Formatter;
 
   #createDir(): Promise<void>;
-  #format(type: string, indent: number, ...args: unknown[]): string;
-  #formatPretty(type: string, indent: number, ...args: unknown[]): string;
-  #formatFile(type: string, indent: number, ...args: unknown[]): string;
-  #formatJson(type: string, indent: number, ...args: unknown[]): string;
-  #normalizeStack(stack: string): string;
-  #expandError(err: Error): unknown;
+  #setupCrashHandling(): void;
 }
+
+export function nowDays(): number;
+export function nameToDays(fileName: string): number;

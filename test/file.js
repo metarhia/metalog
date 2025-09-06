@@ -88,12 +88,10 @@ const run = async () => {
     for (let i = 0; i < 1000000; i++) {
       logger.console.info('Write more then 60Mb logs, line: ' + i);
     }
-    logger.on('close', () => {
-      const end = process.hrtime(begin);
-      const time = end[0] * 1e9 + end[1];
-      console.log({ time });
-    });
     await logger.close();
+    const end = process.hrtime(begin);
+    const time = end[0] * 1e9 + end[1];
+    console.log({ time });
   });
 
   test('logger.close', async () => {
