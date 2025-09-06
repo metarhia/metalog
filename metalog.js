@@ -4,26 +4,26 @@ const fs = require('node:fs');
 const fsp = fs.promises;
 const path = require('node:path');
 const util = require('node:util');
-const events = require('node:events');
+const EventEmitter = require('node:events');
 const readline = require('node:readline');
 const metautil = require('metautil');
 const concolor = require('concolor');
 
 const DAY_MILLISECONDS = metautil.duration('1d');
-const DEFAULT_WRITE_INTERVAL = metautil.duration('3s');
-const DEFAULT_BUFFER_SIZE = 64 * 1024;
+const DEFAULT_FLUSH_INTERVAL = metautil.duration('3s');
+const DEFAULT_BUFFER_THRESHOLD = 64 * 1024;
 const DEFAULT_KEEP_DAYS = 1;
 const STACK_AT = '  at ';
-const TYPE_LENGTH = 6;
+const TAG_LENGTH = 6;
 const LINE_SEPARATOR = ';';
 const INDENT = 2;
 const DATE_LEN = 'YYYY-MM-DD'.length;
 const TIME_START = DATE_LEN + 1;
 const TIME_END = TIME_START + 'HH:MM:SS'.length;
 
-const LOG_TYPES = ['log', 'info', 'warn', 'debug', 'error'];
+const LOG_TAGS = ['log', 'info', 'warn', 'debug', 'error'];
 
-const TYPE_COLOR = concolor({
+const TAG_COLOR = concolor({
   log: 'b,black/white',
   info: 'b,white/blue',
   warn: 'b,black/yellow',
@@ -47,11 +47,9 @@ const DEFAULT_FLAGS = {
   error: false,
 };
 
-const logTypes = (types) => {
+const logTags = (tags) => {
   const flags = { ...DEFAULT_FLAGS };
-  for (const type of types) {
-    flags[type] = true;
-  }
+  for (const tag of tags) flags[tag] = true;
   return flags;
 };
 
@@ -64,9 +62,17 @@ const nowDays = () => {
   return Math.floor(date.getTime() / DAY_MILLISECONDS);
 };
 
-const nameToDays = (fileName) => {
+const nameToDays = (fileName = '') => {
+  if (fileName.length < DATE_LEN) {
+    throw new Error(`Invalid filename: ${fileName}`);
+  }
   const date = fileName.substring(0, DATE_LEN);
-  const fileTime = new Date(date).getTime();
+  const [year, month, day] = date.split('-').map(Number);
+  const fileDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+  const fileTime = fileDate.getTime();
+  if (isNaN(fileTime)) {
+    throw new Error(`Invalid filename: ${fileName}`);
+  }
   return Math.floor(fileTime / DAY_MILLISECONDS);
 };
 
@@ -76,6 +82,132 @@ const getNextReopen = () => {
   const nextDate = now.setUTCHours(0, 0, 0, 0);
   return nextDate - curTime + DAY_MILLISECONDS;
 };
+
+class BufferedStream extends EventEmitter {
+  #writable = null;
+  #buffers = [];
+  #size = 0;
+  #threshold = DEFAULT_BUFFER_THRESHOLD;
+  #flushing = false;
+  #flushTimer = null;
+
+  constructor(options = {}) {
+    super();
+    const { stream, writeBuffer, flushInterval } = options;
+    if (!stream) throw new Error('Stream is required');
+    this.#writable = stream;
+    if (writeBuffer) this.#threshold = writeBuffer;
+    const interval = flushInterval || DEFAULT_FLUSH_INTERVAL;
+    this.#flushTimer = setInterval(() => void this.flush(), interval);
+  }
+
+  write(buffer) {
+    this.#buffers.push(buffer);
+    this.#size += buffer.length;
+    if (this.#size >= this.#threshold) this.flush();
+  }
+
+  flush(callback) {
+    if (this.#flushing) {
+      if (callback) this.once('drain', callback);
+      return;
+    }
+    if (this.#size === 0) {
+      if (callback) callback();
+      return;
+    }
+    if (this.#writable.destroyed || this.#writable.closed) {
+      if (callback) callback();
+      return;
+    }
+    this.#flushing = true;
+    const buffer = Buffer.concat(this.#buffers);
+    this.#buffers.length = 0;
+    this.#size = 0;
+    this.#writable.write(buffer, (error) => {
+      this.#flushing = false;
+      this.emit('drain');
+      if (callback) callback(error);
+    });
+  }
+
+  async close() {
+    clearInterval(this.#flushTimer);
+    return new Promise((resolve, reject) => {
+      this.flush((error) => {
+        if (error) return void reject(error);
+        this.#writable.end(resolve);
+      });
+    });
+  }
+}
+
+class Formatter {
+  #worker = 'W0';
+  #home = './';
+
+  constructor(options = {}) {
+    const { worker, home } = options;
+    if (worker) this.#worker = worker;
+    if (home) this.#home = home;
+  }
+
+  format(tag, indent, args) {
+    let line = util.format(...args);
+    if (tag === 'error' || tag === 'debug') line = this.normalizeStack(line);
+    return ' '.repeat(indent) + line;
+  }
+
+  formatPretty(tag, indent, args) {
+    const dateTime = new Date().toISOString();
+    const message = this.format(tag, indent, args);
+    const normalColor = TEXT_COLOR[tag];
+    const markColor = TAG_COLOR[tag];
+    const time = normalColor(dateTime.substring(TIME_START, TIME_END));
+    const id = normalColor(this.#worker);
+    const mark = markColor(' ' + tag.padEnd(TAG_LENGTH));
+    const msg = normalColor(message);
+    return `${time}  ${id}  ${mark}  ${msg}`;
+  }
+
+  formatFile(tag, indent, args) {
+    const dateTime = new Date().toISOString();
+    const message = this.format(tag, indent, args);
+    const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
+    return `${dateTime} [${tag}] ${msg}`;
+  }
+
+  formatJson(tag, indent, args) {
+    const timestamp = new Date().toISOString();
+    const json = { timestamp, worker: this.#worker, tag, message: null };
+    let data = args.slice();
+    const head = data[0];
+    if (metautil.isError(head)) {
+      json.error = this.expandError(head);
+      data = data.slice(1);
+    } else if (typeof head === 'object') {
+      Object.assign(json, head);
+      data = data.slice(1);
+    }
+    json.message = util.format(...data);
+    return JSON.stringify(json);
+  }
+
+  normalizeStack(stack) {
+    if (!stack) return 'No stack trace to log';
+    let res = metautil.replace(stack, STACK_AT, '');
+    if (this.#home) res = metautil.replace(res, this.#home, '');
+    return res;
+  }
+
+  expandError(error) {
+    return {
+      message: error.message,
+      stack: this.normalizeStack(error.stack),
+      ...error,
+    };
+  }
+}
 
 class Console {
   #logger;
@@ -162,24 +294,21 @@ class Console {
   }
 
   table(tabularData, properties) {
+    const opts = { showHidden: false, depth: null, colors: false };
+    let data = tabularData;
     if (properties) {
-      const filtered = Array.isArray(tabularData)
-        ? tabularData.map((item) => {
-            const filteredItem = {};
-            for (const prop of properties) {
-              if (Object.prototype.hasOwnProperty.call(item, prop)) {
-                filteredItem[prop] = item[prop];
-              }
-            }
-            return filteredItem;
-          })
-        : tabularData;
-      const opts = { showHidden: false, depth: null, colors: false };
-      this.#logger.write('log', 0, [util.inspect(filtered, opts)]);
-    } else {
-      const opts = { showHidden: false, depth: null, colors: false };
-      this.#logger.write('log', 0, [util.inspect(tabularData, opts)]);
+      if (!Array.isArray(data)) data = [data];
+      data = data.map((item) => {
+        const record = {};
+        for (const prop of properties) {
+          if (Object.prototype.hasOwnProperty.call(item, prop)) {
+            record[prop] = item[prop];
+          }
+        }
+        return record;
+      });
     }
+    this.#logger.write('log', 0, [util.inspect(data, opts)]);
   }
 
   time(label = 'default') {
@@ -209,43 +338,38 @@ class Console {
   }
 }
 
-class Logger extends events.EventEmitter {
+class Logger extends EventEmitter {
   active = false;
-  workerId = 'W0';
+  #worker = 'W0';
   #createStream = fs.createWriteStream;
-  #writeInterval = DEFAULT_WRITE_INTERVAL;
-  #writeBuffer = DEFAULT_BUFFER_SIZE;
+  #options = null;
   #keepDays = DEFAULT_KEEP_DAYS;
   #stream = null;
   #rotationTimer = null;
-  #flushTimer = null;
-  #flashing = false;
-  #buffers = [];
-  #bufferedBytes = 0;
   #file = '';
   #fsEnabled = false;
-  #json = false;
   #toFile = null;
   #toStdout = null;
+  #buffer = null;
+  #formatter = null;
 
   constructor(options) {
     super();
-    const { workerId, createStream } = options;
-    const { writeInterval, writeBuffer, keepDays, home, json, crash } = options;
-    const { toFile = LOG_TYPES, toStdout = LOG_TYPES } = options;
+    this.#options = options;
+    const { workerId, createStream, keepDays, home, crash, json } = options;
+    const { toFile = LOG_TAGS, toStdout = LOG_TAGS } = options;
     this.path = options.path;
     this.home = home;
     this.console = new Console(this);
-    if (workerId) this.workerId = `W${workerId}`;
-    if (json) this.#json = true;
-    if (toFile) this.#toFile = logTypes(toFile);
-    if (toStdout) this.#toStdout = logTypes(toStdout);
+    if (workerId) this.#worker = `W${workerId}`;
+    if (toFile) this.#toFile = logTags(toFile);
+    if (toStdout) this.#toStdout = logTags(toStdout);
     if (createStream) this.#createStream = createStream;
-    if (writeInterval) this.#writeInterval = writeInterval;
-    if (writeBuffer) this.#writeBuffer = writeBuffer;
     if (keepDays) this.#keepDays = keepDays;
     if (crash === 'flush') this.#setupCrashHandling();
     this.#fsEnabled = toFile.length !== 0;
+    this.#buffer = null;
+    this.#formatter = new Formatter({ json, worker: this.#worker, home });
     return this.open();
   }
 
@@ -253,43 +377,32 @@ class Logger extends events.EventEmitter {
     return new Logger(options);
   }
 
-  get json() {
-    return this.#json;
-  }
-
   async open() {
     if (this.active) return this;
     this.active = true;
-    if (!this.#fsEnabled) {
-      process.nextTick(() => this.emit('open'));
-      return this;
-    }
+    if (!this.#fsEnabled) return this;
     await this.#createDir();
-    const fileName = metautil.nowDate() + '-' + this.workerId + '.log';
+    const fileName = metautil.nowDate() + '-' + this.#worker + '.log';
     this.#file = path.join(this.path, fileName);
     const nextReopen = getNextReopen();
     this.#rotationTimer = setTimeout(() => {
       this.once('close', () => {
         this.open();
       });
-      this.close().catch((err) => {
-        process.stdout.write(`${err.stack}\n`);
-        this.emit('error', err);
+      this.close().catch((error) => {
+        this.emit('error', error);
       });
     }, nextReopen);
     if (this.#keepDays) await this.rotate();
-    this.#stream = this.#createStream(this.#file, { flags: 'a' });
-    this.#flushTimer = setInterval(() => {
-      this.flush();
-    }, this.#writeInterval);
-    this.#stream.on('open', () => {
-      this.emit('open');
-    });
-    this.#stream.on('error', () => {
-      const errorMsg = `Can't open log file: ${this.#file}`;
+    const stream = this.#createStream(this.#file, { flags: 'a' });
+    this.#stream = stream;
+    const { writeBuffer, flushInterval } = this.#options;
+    this.#buffer = new BufferedStream({ writeBuffer, stream, flushInterval });
+    stream.on('error', (error) => {
+      const errorMsg = `Can't open log file: ${this.#file}, ${error.message}`;
       this.emit('error', new Error(errorMsg));
     });
-    await events.once(this, 'open');
+    await EventEmitter.once(stream, 'open');
     return this;
   }
 
@@ -301,27 +414,27 @@ class Logger extends events.EventEmitter {
       return Promise.resolve();
     }
     const stream = this.#stream;
-    if (!stream || stream.destroyed || stream.closed) {
-      return Promise.resolve();
-    }
+    if (stream.destroyed || stream.closed) return Promise.resolve();
+    clearTimeout(this.#rotationTimer);
+    this.#rotationTimer = null;
     return new Promise((resolve, reject) => {
-      this.flush((err) => {
-        if (err) return void reject(err);
+      this.flush((error) => {
+        if (error) return void reject(error);
         this.active = false;
-        this.#stream.end(() => {
-          clearInterval(this.#flushTimer);
-          clearTimeout(this.#rotationTimer);
-          this.#flushTimer = null;
-          this.#rotationTimer = null;
-          const fileName = this.#file;
-          this.emit('close');
-          fs.stat(fileName, (err, stats) => {
-            if (!err && stats.size === 0) {
+        this.#buffer
+          .close()
+          .then(() => {
+            const fileName = this.#file;
+            this.emit('close');
+            fs.stat(fileName, (error, stats) => {
+              if (error || stats.size > 0) {
+                return void resolve();
+              }
               fsp.unlink(fileName).catch(() => {});
-            }
-            resolve();
-          });
-        });
+              resolve();
+            });
+          })
+          .catch(reject);
       });
     });
   }
@@ -336,160 +449,85 @@ class Logger extends events.EventEmitter {
         if (metautil.fileExt(fileName) !== 'log') continue;
         const fileAge = now - nameToDays(fileName);
         if (fileAge < this.#keepDays) continue;
-        finish.push(fsp.unlink(path.join(this.path, fileName)));
+        const promise = fsp
+          .unlink(path.join(this.path, fileName))
+          .catch(() => {});
+        finish.push(promise);
       }
       await Promise.all(finish);
-    } catch (err) {
-      process.stdout.write(`${err.stack}\n`);
-      this.emit('error', err);
+    } catch (error) {
+      process.stdout.write(`${error.stack}\n`);
+      this.emit('error', error);
     }
   }
 
   #createDir() {
     return new Promise((resolve, reject) => {
-      fs.access(this.path, (err) => {
-        if (!err) resolve();
-        fs.mkdir(this.path, (err) => {
-          if (!err || err.code === 'EEXIST') return void resolve();
-          const error = new Error(`Can not create directory: ${this.path}\n`);
-          this.emit('error', error);
-          reject();
+      fs.access(this.path, (error) => {
+        if (!error) resolve();
+        fs.mkdir(this.path, (error) => {
+          if (!error || error.code === 'EEXIST') {
+            return void resolve();
+          } else {
+            const error = new Error(`Can not create directory: ${this.path}`);
+            this.emit('error', error);
+            reject(error);
+          }
         });
       });
     });
   }
 
-  write(type, indent, args) {
-    if (this.#toStdout[type]) {
-      const line = this.#json
-        ? this.#formatJson(type, indent, ...args)
-        : this.#formatPretty(type, indent, ...args);
+  write(tag, indent, args) {
+    if (this.#toStdout[tag]) {
+      const line = this.#options.json
+        ? this.#formatter.formatJson(tag, indent, args)
+        : this.#formatter.formatPretty(tag, indent, args);
       process.stdout.write(line + '\n');
     }
-    if (this.#toFile[type]) {
-      const line = this.#json
-        ? this.#formatJson(type, indent, ...args)
-        : this.#formatFile(type, indent, ...args);
+    if (this.#toFile[tag]) {
+      const line = this.#options.json
+        ? this.#formatter.formatJson(tag, indent, args)
+        : this.#formatter.formatFile(tag, indent, args);
       const buffer = Buffer.from(line + '\n');
-      this.#buffers.push(buffer);
-      this.#bufferedBytes += buffer.length;
-      if (this.#bufferedBytes >= this.#writeBuffer) this.flush();
+      this.#buffer.write(buffer);
     }
   }
 
   flush(callback) {
-    if (this.#flashing) {
-      if (callback) this.once('unlocked', callback);
-      return;
-    }
-    if (this.#bufferedBytes === 0) {
-      if (callback) callback();
-      return;
-    }
     if (!this.active) {
-      const err = new Error('Cannot flush log buffer: logger is not active');
-      this.emit('error', err);
-      if (callback) callback(err);
-      return;
-    }
-    const stream = this.#stream;
-    if (!stream || stream.destroyed || stream.closed) {
-      const err = new Error('Cannot flush log buffer: stream is not available');
-      this.emit('error', err);
-      if (callback) callback(err);
-      return;
-    }
-    this.#flashing = true;
-    const buffer = Buffer.concat(this.#buffers);
-    this.#buffers.length = 0;
-    this.#bufferedBytes = 0;
-    this.#stream.write(buffer, () => {
-      this.#flashing = false;
-      this.emit('unlocked');
       if (callback) callback();
-    });
-  }
-
-  #format(type, indent, ...args) {
-    const normalize = type === 'error' || type === 'debug';
-    const s = `${' '.repeat(indent)}${util.format(...args)}`;
-    return normalize ? this.#normalizeStack(s) : s;
-  }
-
-  #formatPretty(type, indent, ...args) {
-    const dateTime = new Date().toISOString();
-    const message = this.#format(type, indent, ...args);
-    const normalColor = TEXT_COLOR[type];
-    const markColor = TYPE_COLOR[type];
-    const time = normalColor(dateTime.substring(TIME_START, TIME_END));
-    const id = normalColor(this.workerId);
-    const mark = markColor(' ' + type.padEnd(TYPE_LENGTH));
-    const msg = normalColor(message);
-    return `${time}  ${id}  ${mark}  ${msg}`;
-  }
-
-  #formatFile(type, indent, ...args) {
-    const dateTime = new Date().toISOString();
-    const message = this.#format(type, indent, ...args);
-    const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
-    return `${dateTime} [${type}] ${msg}`;
-  }
-
-  #formatJson(type, indent, ...args) {
-    const log = {
-      timestamp: new Date().toISOString(),
-      workerId: this.workerId,
-      level: type,
-      message: null,
-    };
-    if (metautil.isError(args[0])) {
-      log.err = this.#expandError(args[0]);
-      args = args.slice(1);
-    } else if (typeof args[0] === 'object') {
-      Object.assign(log, args[0]);
-      if (metautil.isError(log.err)) log.err = this.#expandError(log.err);
-      if (metautil.isError(log.error)) log.error = this.#expandError(log.error);
-      args = args.slice(1);
+      return;
     }
-    log.message = util.format(...args);
-    return JSON.stringify(log);
-  }
-
-  #normalizeStack(stack) {
-    if (!stack) return 'no data to log';
-    let res = metautil.replace(stack, STACK_AT, '');
-    if (this.home) res = metautil.replace(res, this.home, '');
-    return res;
-  }
-
-  #expandError(err) {
-    return {
-      message: err.message,
-      stack: this.#normalizeStack(err.stack),
-      ...err,
-    };
+    if (!this.#buffer) {
+      if (callback) callback();
+      return;
+    }
+    this.#buffer.flush((error) => {
+      if (error) this.emit('error', error);
+      if (callback) callback(error);
+    });
   }
 
   #setupCrashHandling() {
     const exitHandler = () => {
-      this.flush();
+      if (this.active) this.flush();
     };
     process.on('SIGTERM', exitHandler);
     process.on('SIGINT', exitHandler);
     process.on('SIGUSR1', exitHandler);
     process.on('SIGUSR2', exitHandler);
-    process.on('uncaughtException', (err) => {
-      this.write('error', 0, ['Uncaught Exception:', err]);
-      this.flush();
-    });
-    process.on('unhandledRejection', (reason) => {
-      this.write('error', 0, ['Unhandled Rejection:', reason]);
-      this.flush();
-    });
-    process.on('exit', () => {
-      this.flush();
-    });
+    process.on('uncaughtException', exitHandler);
+    process.on('unhandledRejection', exitHandler);
+    process.on('exit', exitHandler);
   }
 }
 
-module.exports = { Logger };
+module.exports = {
+  Logger,
+  Console,
+  BufferedStream,
+  Formatter,
+  nowDays,
+  nameToDays,
+};
