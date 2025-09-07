@@ -2,11 +2,23 @@
 
 ## [Unreleased][unreleased]
 
+## [4.0.0-prerelease][] - 2025-09-07
+
 - Enhanced Console class with full Node.js API compatibility:
   - Added `console.dirxml()` method
   - Enhanced `console.dir()` to support options parameter
   - Enhanced `console.table()` to support properties parameter
   - Fixed `console.timeLog()` to properly calculate elapsed time
+- Decompose Logger to:
+  - `Logger` - Main logging class with file rotation and buffering
+  - `Console` - Full Node.js console API compatibility
+  - `BufferedStream` - Efficient buffered stream writing
+  - `Formatter` - Log formatting with pretty, file, and JSON output
+- Renamed options: `writeInterval` → `flushInterval`
+- Added complete configuration options table with types and defaults
+- Added advanced usage examples (custom streams, selective logging, JSON logging)
+- Added comprehensive API reference for all classes and methods
+- Corrected: "log levels" → "log tags" throughout code and docs
 
 ## [3.1.17][] - 2025-09-04
 
@@ -131,7 +143,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.17...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.0-prerelease...HEAD
+[4.0.0-prerelease]: https://github.com/metarhia/metalog/compare/v3.1.17...v4.0.0-prerelease
 [3.1.17]: https://github.com/metarhia/metalog/compare/v3.1.16...v3.1.17
 [3.1.16]: https://github.com/metarhia/metalog/compare/v3.1.15...v3.1.16
 [3.1.15]: https://github.com/metarhia/metalog/compare/v3.1.14...v3.1.15
