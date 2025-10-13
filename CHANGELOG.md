@@ -2,6 +2,11 @@
 
 ## [Unreleased][unreleased]
 
+## [3.1.18][] - 2025-10-14
+
+- Fix ENOENT with relative path for 3.x
+- Update dependencies
+
 ## [3.1.17][] - 2025-09-04
 
 - Consolidate test files: `console.js` and `json.js` to eliminate code duplication
@@ -125,7 +130,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.17...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v3.1.18...HEAD
+[3.1.18]: https://github.com/metarhia/metalog/compare/v3.1.17...v3.1.18
 [3.1.17]: https://github.com/metarhia/metalog/compare/v3.1.16...v3.1.17
 [3.1.16]: https://github.com/metarhia/metalog/compare/v3.1.15...v3.1.16
 [3.1.15]: https://github.com/metarhia/metalog/compare/v3.1.14...v3.1.15
