@@ -180,3 +180,51 @@ test('Logger write with indentation', async () => {
   await logger.flush();
   await logger.close();
 });
+
+test('Logger rotation with relative path: ENOENT', async () => {
+  const fs = require('node:fs');
+  const fsp = fs.promises;
+  const path = require('node:path');
+
+  const originalCwd = process.cwd();
+  const logPath = './logs-rotation-test';
+  const absolutePath = path.resolve(logPath);
+  await fsp.mkdir(absolutePath, { recursive: true });
+
+  const now = new Date();
+  const oldDate = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
+  const dateStr = oldDate.toISOString().split('T')[0];
+  const oldFileName = `${dateStr}-W0.log`;
+  await fsp.writeFile(path.join(absolutePath, oldFileName), 'old log\n');
+
+  let rotationError = null;
+
+  const logger = await Logger.create({
+    path: logPath,
+    home: process.cwd(),
+    keepDays: 5,
+    toStdout: [],
+    toFile: [],
+  });
+
+  logger.on('error', (err) => {
+    rotationError = err;
+  });
+
+  const tempDir = await fsp.mkdtemp(path.join(originalCwd, 'temp-'));
+  process.chdir(tempDir);
+
+  await logger.rotate();
+
+  process.chdir(originalCwd);
+  await logger.close();
+
+  await fsp.rm(absolutePath, { recursive: true, force: true });
+  await fsp.rm(tempDir, { recursive: true, force: true });
+
+  if (rotationError) {
+    throw new Error(
+      `Rotation failed with ${rotationError.code}: ${rotationError.message}`,
+    );
+  }
+});
