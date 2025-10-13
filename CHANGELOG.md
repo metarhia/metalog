@@ -2,6 +2,11 @@
 
 ## [Unreleased][unreleased]
 
+## [4.0.1-prerelease][] - 2025-10-13
+
+- Fix ENOENT error when using relative paths
+- Add tests to reproduce and verify ENOENT fix
+
 ## [4.0.0-prerelease][] - 2025-09-07
 
 - Enhanced Console class with full Node.js API compatibility:
@@ -143,8 +148,10 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.0-prerelease...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.1-prerelease...HEAD
+[4.0.1-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.0-prerelease...v4.0.1-prerelease
 [4.0.0-prerelease]: https://github.com/metarhia/metalog/compare/v3.1.17...v4.0.0-prerelease
+[3.1.18]: https://github.com/metarhia/metalog/compare/v3.1.17...v3.1.18
 [3.1.17]: https://github.com/metarhia/metalog/compare/v3.1.16...v3.1.17
 [3.1.16]: https://github.com/metarhia/metalog/compare/v3.1.15...v3.1.16
 [3.1.15]: https://github.com/metarhia/metalog/compare/v3.1.14...v3.1.15
