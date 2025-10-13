@@ -358,8 +358,8 @@ class Logger extends EventEmitter {
     this.#options = options;
     const { workerId, createStream, keepDays, home, crash, json } = options;
     const { toFile = LOG_TAGS, toStdout = LOG_TAGS } = options;
-    this.path = options.path;
-    this.home = home;
+    this.path = path.resolve(options.path);
+    this.home = home ? path.resolve(home) : undefined;
     this.console = new Console(this);
     if (workerId) this.#worker = `W${workerId}`;
     if (toFile) this.#toFile = logTags(toFile);
@@ -369,7 +369,8 @@ class Logger extends EventEmitter {
     if (crash === 'flush') this.#setupCrashHandling();
     this.#fsEnabled = toFile.length !== 0;
     this.#buffer = null;
-    this.#formatter = new Formatter({ json, worker: this.#worker, home });
+    const formatterOptions = { json, worker: this.#worker, home: this.home };
+    this.#formatter = new Formatter(formatterOptions);
     return this.open();
   }
 
@@ -449,12 +450,11 @@ class Logger extends EventEmitter {
         if (metautil.fileExt(fileName) !== 'log') continue;
         const fileAge = now - nameToDays(fileName);
         if (fileAge < this.#keepDays) continue;
-        const promise = fsp
-          .unlink(path.join(this.path, fileName))
-          .catch(() => {});
+        const filePath = path.join(this.path, fileName);
+        const promise = fsp.unlink(filePath).catch(() => {});
         finish.push(promise);
       }
-      await Promise.all(finish);
+      await Promise.allSettled(finish);
     } catch (error) {
       process.stdout.write(`${error.stack}\n`);
       this.emit('error', error);
