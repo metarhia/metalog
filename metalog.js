@@ -191,12 +191,13 @@ class Logger extends events.EventEmitter {
     const { toFile = LOG_TYPES, toStdout = LOG_TYPES, crash } = options;
     this.active = false;
     this.path = options.path;
+    this.path = path.resolve(options.path);
     this.workerId = `W${workerId}`;
     this.createStream = createStream;
     this.writeInterval = writeInterval || DEFAULT_WRITE_INTERVAL;
     this.writeBuffer = writeBuffer || DEFAULT_BUFFER_SIZE;
     this.keepDays = keepDays || DEFAULT_KEEP_DAYS;
-    this.home = home;
+    this.home = home ? path.resolve(home) : undefined;
     this.json = Boolean(json);
     this.stream = null;
     this.reopenTimer = null;
@@ -305,9 +306,11 @@ class Logger extends events.EventEmitter {
         if (metautil.fileExt(fileName) !== 'log') continue;
         const fileAge = now - nameToDays(fileName);
         if (fileAge < this.keepDays) continue;
-        finish.push(fsp.unlink(path.join(this.path, fileName)));
+        const filePath = path.join(this.path, fileName);
+        const promise = fsp.unlink(filePath).catch(() => {});
+        finish.push(promise);
       }
-      await Promise.all(finish);
+      await Promise.allSettled(finish);
     } catch (err) {
       process.stdout.write(`${err.stack}\n`);
       this.emit('error', err);
