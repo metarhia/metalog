@@ -2,6 +2,11 @@
 
 ## [Unreleased][unreleased]
 
+## [4.0.2-prerelease][] - 2025-12-28
+
+- Update dependencies
+- Add node.js 25 to CI
+
 ## [4.0.1-prerelease][] - 2025-10-13
 
 - Fix ENOENT error when using relative paths
@@ -148,7 +153,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.1-prerelease...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.2-prerelease...HEAD
+[4.0.2-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.1-prerelease...v4.0.2-prerelease
 [4.0.1-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.0-prerelease...v4.0.1-prerelease
 [4.0.0-prerelease]: https://github.com/metarhia/metalog/compare/v3.1.17...v4.0.0-prerelease
 [3.1.18]: https://github.com/metarhia/metalog/compare/v3.1.17...v3.1.18
