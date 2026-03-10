@@ -2,6 +2,12 @@
 
 ## [Unreleased][unreleased]
 
+## [4.0.3-prerelease][] - 2026-03-10
+
+- Remove private members from TypeScript declarations
+- Audit: Bump minimatch from 3.1.2 to 3.1.5
+- Update dependencies
+
 ## [4.0.2-prerelease][] - 2025-12-28
 
 - Update dependencies
@@ -153,7 +159,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.2-prerelease...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.3-prerelease...HEAD
+[4.0.3-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.2-prerelease...v4.0.3-prerelease
 [4.0.2-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.1-prerelease...v4.0.2-prerelease
 [4.0.1-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.0-prerelease...v4.0.1-prerelease
 [4.0.0-prerelease]: https://github.com/metarhia/metalog/compare/v3.1.17...v4.0.0-prerelease
