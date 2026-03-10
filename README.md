@@ -361,6 +361,6 @@ logger.console.debug('Debug information', { data: 'value' });
 
 ## License & Contributors
 
-Copyright (c) 2017-2025 [Metarhia contributors](https://github.com/metarhia/metalog/graphs/contributors).
+Copyright (c) 2017-2026 [Metarhia contributors](https://github.com/metarhia/metalog/graphs/contributors).
 Metalog is [MIT licensed](./LICENSE).\
 Metalog is a part of [Metarhia](https://github.com/metarhia) technology stack.
