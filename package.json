@@ -12,7 +12,7 @@
     "impress",
     "server",
     "jstp",
-    "globalstorege",
+    "globalstorage",
     "highload",
     "cloud",
     "api",
@@ -39,7 +39,7 @@
   "types": "metalog.d.ts",
   "readmeFilename": "README.md",
   "files": [
-    "types/",
+    "metalog.js",
     "metalog.d.ts"
   ],
   "scripts": {
