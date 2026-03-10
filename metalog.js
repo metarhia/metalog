@@ -23,6 +23,16 @@ const TIME_END = TIME_START + 'HH:MM:SS'.length;
 
 const LOG_TAGS = ['log', 'info', 'warn', 'debug', 'error'];
 
+const CRASH_EVENTS = [
+  'SIGTERM',
+  'SIGINT',
+  'SIGUSR1',
+  'SIGUSR2',
+  'uncaughtException',
+  'unhandledRejection',
+  'exit',
+];
+
 const TAG_COLOR = concolor({
   log: 'b,black/white',
   info: 'b,white/blue',
@@ -55,11 +65,10 @@ const logTags = (tags) => {
 
 const nowDays = () => {
   const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth();
-  const day = now.getUTCDate();
-  const date = new Date(year, month, day, 0, 0, 0, 0);
-  return Math.floor(date.getTime() / DAY_MILLISECONDS);
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const d = now.getUTCDate();
+  return Math.floor(Date.UTC(y, m, d) / DAY_MILLISECONDS);
 };
 
 const nameToDays = (fileName = '') => {
@@ -68,12 +77,11 @@ const nameToDays = (fileName = '') => {
   }
   const date = fileName.substring(0, DATE_LEN);
   const [year, month, day] = date.split('-').map(Number);
-  const fileDate = new Date(year, month - 1, day, 0, 0, 0, 0);
-  const fileTime = fileDate.getTime();
-  if (isNaN(fileTime)) {
+  const utc = Date.UTC(year, month - 1, day);
+  if (isNaN(utc)) {
     throw new Error(`Invalid filename: ${fileName}`);
   }
-  return Math.floor(fileTime / DAY_MILLISECONDS);
+  return Math.floor(utc / DAY_MILLISECONDS);
 };
 
 const getNextReopen = () => {
@@ -165,7 +173,7 @@ class Formatter {
     const markColor = TAG_COLOR[tag];
     const time = normalColor(dateTime.substring(TIME_START, TIME_END));
     const id = normalColor(this.#worker);
-    const mark = markColor(' ' + tag.padEnd(TAG_LENGTH));
+    const mark = markColor(` ${tag.padEnd(TAG_LENGTH)}`);
     const msg = normalColor(message);
     return `${time}  ${id}  ${mark}  ${msg}`;
   }
@@ -173,30 +181,31 @@ class Formatter {
   formatFile(tag, indent, args) {
     const dateTime = new Date().toISOString();
     const message = this.format(tag, indent, args);
-    const msg = metautil.replace(message, '\n', LINE_SEPARATOR);
+    const msg = message.replaceAll('\n', LINE_SEPARATOR);
     return `${dateTime} [${tag}] ${msg}`;
   }
 
   formatJson(tag, indent, args) {
     const timestamp = new Date().toISOString();
     const json = { timestamp, worker: this.#worker, tag, message: null };
-    let data = args.slice();
-    const head = data[0];
+    const head = args[0];
+    let start = 0;
     if (metautil.isError(head)) {
       json.error = this.expandError(head);
-      data = data.slice(1);
+      start = 1;
     } else if (typeof head === 'object') {
       Object.assign(json, head);
-      data = data.slice(1);
+      start = 1;
     }
-    json.message = util.format(...data);
+    const rest = start === 0 ? args : args.slice(start);
+    json.message = util.format(...rest);
     return JSON.stringify(json);
   }
 
   normalizeStack(stack) {
     if (!stack) return 'No stack trace to log';
-    let res = metautil.replace(stack, STACK_AT, '');
-    if (this.#home) res = metautil.replace(res, this.#home, '');
+    let res = stack.replaceAll(STACK_AT, '');
+    if (this.#home) res = res.replaceAll(this.#home, '');
     return res;
   }
 
@@ -312,15 +321,20 @@ class Console {
   }
 
   time(label = 'default') {
-    this.#times.set(label, process.hrtime());
+    this.#times.set(label, process.hrtime.bigint());
   }
 
   timeEnd(label = 'default') {
     const startTime = this.#times.get(label);
-    const totalTime = process.hrtime(startTime);
-    const totalTimeMs = totalTime[0] * 1e3 + totalTime[1] / 1e6;
-    this.timeLog(label, `${label}: ${totalTimeMs}ms`);
+    if (startTime === undefined) {
+      const msg = `Warning: No such label '${label}'`;
+      this.#logger.write('warn', this.#groupIndent, [msg]);
+      return;
+    }
     this.#times.delete(label);
+    const elapsed = Number(process.hrtime.bigint() - startTime) / 1e6;
+    const output = `${label}: ${elapsed}ms`;
+    this.#logger.write('debug', this.#groupIndent, [output]);
   }
 
   timeLog(label = 'default', ...data) {
@@ -330,10 +344,10 @@ class Console {
       this.#logger.write('warn', this.#groupIndent, [msg]);
       return;
     }
-    const totalTime = process.hrtime(startTime);
-    const totalTimeMs = totalTime[0] * 1e3 + totalTime[1] / 1e6;
+    const elapsed = Number(process.hrtime.bigint() - startTime) / 1e6;
     const message = data.length > 0 ? util.format(...data) : '';
-    const output = `${label}: ${totalTimeMs}ms${message ? ' ' + message : ''}`;
+    const suffix = message ? ` ${message}` : '';
+    const output = `${label}: ${elapsed}ms${suffix}`;
     this.#logger.write('debug', this.#groupIndent, [output]);
   }
 }
@@ -352,6 +366,7 @@ class Logger extends EventEmitter {
   #toStdout = null;
   #buffer = null;
   #formatter = null;
+  #exitHandler = null;
 
   constructor(options) {
     super();
@@ -383,7 +398,7 @@ class Logger extends EventEmitter {
     this.active = true;
     if (!this.#fsEnabled) return this;
     await this.#createDir();
-    const fileName = metautil.nowDate() + '-' + this.#worker + '.log';
+    const fileName = `${metautil.nowDate()}-${this.#worker}.log`;
     this.#file = path.join(this.path, fileName);
     const nextReopen = getNextReopen();
     this.#rotationTimer = setTimeout(() => {
@@ -408,36 +423,26 @@ class Logger extends EventEmitter {
   }
 
   async close() {
-    if (!this.active) return Promise.resolve();
+    if (!this.active) return;
+    this.#removeCrashHandling();
     if (!this.#fsEnabled) {
       this.active = false;
       this.emit('close');
-      return Promise.resolve();
+      return;
     }
     const stream = this.#stream;
-    if (stream.destroyed || stream.closed) return Promise.resolve();
+    if (stream.destroyed || stream.closed) return;
     clearTimeout(this.#rotationTimer);
     this.#rotationTimer = null;
-    return new Promise((resolve, reject) => {
-      this.flush((error) => {
-        if (error) return void reject(error);
-        this.active = false;
-        this.#buffer
-          .close()
-          .then(() => {
-            const fileName = this.#file;
-            this.emit('close');
-            fs.stat(fileName, (error, stats) => {
-              if (error || stats.size > 0) {
-                return void resolve();
-              }
-              fsp.unlink(fileName).catch(() => {});
-              resolve();
-            });
-          })
-          .catch(reject);
-      });
-    });
+    this.active = false;
+    await this.#buffer.close();
+    this.emit('close');
+    try {
+      const stats = await fsp.stat(this.#file);
+      if (stats.size === 0) await fsp.unlink(this.#file).catch(() => {});
+    } catch {
+      this.emit('error', new Error(`Can't delete log file: ${this.#file}`));
+    }
   }
 
   async rotate() {
@@ -461,36 +466,35 @@ class Logger extends EventEmitter {
     }
   }
 
-  #createDir() {
-    return new Promise((resolve, reject) => {
-      fs.access(this.path, (error) => {
-        if (!error) resolve();
-        fs.mkdir(this.path, (error) => {
-          if (!error || error.code === 'EEXIST') {
-            return void resolve();
-          } else {
-            const error = new Error(`Can not create directory: ${this.path}`);
-            this.emit('error', error);
-            reject(error);
-          }
-        });
+  async #createDir() {
+    try {
+      await fsp.mkdir(this.path, { recursive: true });
+    } catch (cause) {
+      const error = new Error(`Can not create directory: ${this.path}`, {
+        cause,
       });
-    });
+      this.emit('error', error);
+      throw error;
+    }
   }
 
   write(tag, indent, args) {
-    if (this.#toStdout[tag]) {
-      const line = this.#options.json
-        ? this.#formatter.formatJson(tag, indent, args)
-        : this.#formatter.formatPretty(tag, indent, args);
-      process.stdout.write(line + '\n');
-    }
-    if (this.#toFile[tag]) {
-      const line = this.#options.json
-        ? this.#formatter.formatJson(tag, indent, args)
-        : this.#formatter.formatFile(tag, indent, args);
-      const buffer = Buffer.from(line + '\n');
-      this.#buffer.write(buffer);
+    const toStdout = this.#toStdout[tag];
+    const toFile = this.#toFile[tag];
+    if (!toStdout && !toFile) return;
+    if (this.#options.json) {
+      const line = `${this.#formatter.formatJson(tag, indent, args)}\n`;
+      if (toStdout) process.stdout.write(line);
+      if (toFile) this.#buffer.write(Buffer.from(line));
+    } else {
+      if (toStdout) {
+        const pretty = this.#formatter.formatPretty(tag, indent, args);
+        process.stdout.write(`${pretty}\n`);
+      }
+      if (toFile) {
+        const file = this.#formatter.formatFile(tag, indent, args);
+        this.#buffer.write(Buffer.from(`${file}\n`));
+      }
     }
   }
 
@@ -510,16 +514,20 @@ class Logger extends EventEmitter {
   }
 
   #setupCrashHandling() {
-    const exitHandler = () => {
+    this.#exitHandler = () => {
       if (this.active) this.flush();
     };
-    process.on('SIGTERM', exitHandler);
-    process.on('SIGINT', exitHandler);
-    process.on('SIGUSR1', exitHandler);
-    process.on('SIGUSR2', exitHandler);
-    process.on('uncaughtException', exitHandler);
-    process.on('unhandledRejection', exitHandler);
-    process.on('exit', exitHandler);
+    for (const event of CRASH_EVENTS) {
+      process.on(event, this.#exitHandler);
+    }
+  }
+
+  #removeCrashHandling() {
+    if (!this.#exitHandler) return;
+    for (const event of CRASH_EVENTS) {
+      process.removeListener(event, this.#exitHandler);
+    }
+    this.#exitHandler = null;
   }
 }
 

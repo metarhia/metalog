@@ -90,7 +90,7 @@ test('BufferedStream multiple writes', async () => {
 
   const messages = ['Message 1', 'Message 2', 'Message 3'];
   for (const message of messages) {
-    bufferedStream.write(Buffer.from(message + '\n'));
+    bufferedStream.write(Buffer.from(`${message}\n`));
   }
 
   await new Promise((resolve) => {

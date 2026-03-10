@@ -30,7 +30,7 @@ const run = async () => {
     console.countReset('count-label');
   });
 
-  test('console.debub', () => {
+  test('console.debug', () => {
     console.debug('Test log message for console.debug', 'arg2');
   });
 
@@ -86,7 +86,7 @@ const run = async () => {
     const logger = await createLogger();
     const begin = process.hrtime();
     for (let i = 0; i < 1000000; i++) {
-      logger.console.info('Write more then 60Mb logs, line: ' + i);
+      logger.console.info(`Write more then 60Mb logs, line: ${i}`);
     }
     await logger.close();
     const end = process.hrtime(begin);

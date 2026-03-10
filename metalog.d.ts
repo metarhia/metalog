@@ -79,22 +79,6 @@ export class Logger extends EventEmitter {
   rotate(): Promise<void>;
   write(tag: string, indent: number, args: unknown[]): void;
   flush(callback?: (error?: Error) => void): void;
-
-  #options: LoggerOptions;
-  #worker: string;
-  #createStream: () => NodeJS.WritableStream;
-  #keepDays: number;
-  #stream: NodeJS.WritableStream | null;
-  #rotationTimer: NodeJS.Timer | null;
-  #file: string;
-  #fsEnabled: boolean;
-  #toFile: Record<string, boolean> | null;
-  #toStdout: Record<string, boolean> | null;
-  #buffer: BufferedStream | null;
-  #formatter: Formatter;
-
-  #createDir(): Promise<void>;
-  #setupCrashHandling(): void;
 }
 
 export function nowDays(): number;
