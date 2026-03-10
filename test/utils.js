@@ -26,10 +26,7 @@ test('nameToDays utility function', () => {
     throw new Error('nameToDays should return a number');
   }
 
-  const expectedDate = new Date(2025, 0, 1, 0, 0, 0, 0);
-  const expectedDays = Math.floor(
-    expectedDate.getTime() / (24 * 60 * 60 * 1000),
-  );
+  const expectedDays = Math.floor(Date.UTC(2025, 0, 1) / (24 * 60 * 60 * 1000));
   if (days !== expectedDays) {
     throw new Error('nameToDays calculation incorrect');
   }
@@ -70,14 +67,9 @@ test('nameToDays with different date formats', () => {
       throw new Error(`nameToDays should return a number for ${fileName}`);
     }
 
-    const expectedDate = new Date(
-      testCase.expectedYear,
-      testCase.expectedMonth,
-      testCase.expectedDay,
-    );
-    const expectedDays = Math.floor(
-      expectedDate.getTime() / (24 * 60 * 60 * 1000),
-    );
+    const { expectedYear, expectedMonth, expectedDay } = testCase;
+    const utc = Date.UTC(expectedYear, expectedMonth, expectedDay);
+    const expectedDays = Math.floor(utc / (24 * 60 * 60 * 1000));
     if (days !== expectedDays) {
       const fileName = testCase.fileName;
       throw new Error(`nameToDays calculation incorrect for ${fileName}`);
