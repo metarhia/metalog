@@ -243,10 +243,10 @@ class Console {
   }
 
   count(label = 'default') {
-    let cnt = this.#counts.get(label) || 0;
-    cnt++;
-    this.#counts.set(label, cnt);
-    this.#logger.write('debug', this.#groupIndent, [`${label}: ${cnt}`]);
+    const current = this.#counts.get(label) || 0;
+    const countValue = current + 1;
+    this.#counts.set(label, countValue);
+    this.#logger.write('debug', this.#groupIndent, [`${label}: ${countValue}`]);
   }
 
   countReset(label = 'default') {
@@ -268,8 +268,8 @@ class Console {
 
   trace(...args) {
     const msg = util.format(...args);
-    const err = new Error(msg);
-    this.#logger.write('debug', this.#groupIndent, [`Trace${err.stack}`]);
+    const error = new Error(msg);
+    this.#logger.write('debug', this.#groupIndent, [`Trace${error.stack}`]);
   }
 
   info(...args) {
@@ -439,9 +439,13 @@ class Logger extends EventEmitter {
     this.emit('close');
     try {
       const stats = await fsp.stat(this.#file);
-      if (stats.size === 0) await fsp.unlink(this.#file).catch(() => {});
-    } catch {
-      this.emit('error', new Error(`Can't delete log file: ${this.#file}`));
+      if (stats.size === 0) {
+        await fsp.unlink(this.#file).catch((error) => {
+          this.emit('error', error);
+        });
+      }
+    } catch (error) {
+      this.emit('error', error);
     }
   }
 
