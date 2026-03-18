@@ -39,8 +39,8 @@ const run = async () => {
   });
 
   test('console.error', () => {
-    const err = new Error('Test log message for console.error');
-    console.error(err);
+    const error = new Error('Test log message for console.error');
+    console.error(error);
   });
 
   test('console.group', () => {
