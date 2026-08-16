@@ -2,6 +2,17 @@
 
 ## [Unreleased][unreleased]
 
+## [4.0.4-prerelease][] - 2026-08-17
+
+- Flush writes that arrive during an in-flight flush
+- Skip file writes after `close()`
+- Treat `null` as a JSON message, not a log object
+- Flush on `beforeExit` when `crash: 'flush'`
+- Update TypeScript typings and README
+- Improve code style
+- Add node.js 26 to CI
+- Update dependencies
+
 ## [4.0.3-prerelease][] - 2026-03-10
 
 - Remove private members from TypeScript declarations
@@ -159,7 +170,8 @@
 
 First generation of Metarhia Logger
 
-[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.3-prerelease...HEAD
+[unreleased]: https://github.com/metarhia/metalog/compare/v4.0.4-prerelease...HEAD
+[4.0.4-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.3-prerelease...v4.0.4-prerelease
 [4.0.3-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.2-prerelease...v4.0.3-prerelease
 [4.0.2-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.1-prerelease...v4.0.2-prerelease
 [4.0.1-prerelease]: https://github.com/metarhia/metalog/compare/v4.0.0-prerelease...v4.0.1-prerelease

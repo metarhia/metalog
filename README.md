@@ -20,12 +20,11 @@ const logger = await Logger.create({
   flushInterval: 3000, // flush log to disk interval (default: 3s)
   writeBuffer: 64 * 1024, // buffer size (default: 64kb)
   keepDays: 5, // delete after N days, 0 - disable (default: 1)
-  home: process.cwd(), // remove substring from paths
+  home: process.cwd(), // remove substring from paths (optional)
   json: false, // print logs in JSON format (default: false)
-  toFile: ['log', 'info', 'warn', 'error'], // tags to write to file (default: all)
-  toStdout: ['log', 'info', 'warn', 'error'], // tags to write to stdout (default: all)
-  createStream: () => fs.createWriteStream, // custom stream factory (optional)
-  crash: 'flush', // crash handling: 'flush' to flush buffer on exit (optional)
+  toFile: ['log', 'info', 'warn', 'debug', 'error'], // tags to file (default: all)
+  toStdout: ['log', 'info', 'warn', 'debug', 'error'], // tags to stdout (default: all)
+  crash: 'flush', // flush buffer on signals, exceptions, beforeExit, and exit
 });
 
 const { console } = logger;
@@ -82,7 +81,7 @@ Metalog provides a fully compatible console implementation that supports all Nod
 - `console.dir(obj[, options])` - Object inspection
 - `console.dirxml(...data)` - XML/HTML inspection
 - `console.group([...label])` - Start group
-- `console.groupCollapsed()` - Start collapsed group
+- `console.groupCollapsed([...label])` - Start collapsed group
 - `console.groupEnd()` - End group
 - `console.table(tabularData[, properties])` - Table display
 - `console.time([label])` - Start timer
@@ -99,16 +98,16 @@ All methods maintain the same behavior as Node.js native console, with output ro
 | Option          | Type       | Default                                     | Description                                         |
 | --------------- | ---------- | ------------------------------------------- | --------------------------------------------------- |
 | `path`          | `string`   | **required**                                | Directory path for log files (absolute or relative) |
-| `home`          | `string`   | **required**                                | Base path to remove from stack traces               |
+| `home`          | `string`   | `undefined`                                 | Base path to remove from stack traces               |
 | `workerId`      | `number`   | `undefined`                                 | Worker/process identifier (appears as W0, W1, etc.) |
-| `flushInterval` | `number`   | `3000`                                      | Flush buffer to disk interval in milliseconds       |
+| `flushInterval` | `number`   | `3000`                                      | Flush interval in ms; values `<= 0` use the default |
 | `writeBuffer`   | `number`   | `65536`                                     | Buffer size threshold before flushing (64KB)        |
 | `keepDays`      | `number`   | `1`                                         | Days to keep log files (0 = disable rotation)       |
 | `json`          | `boolean`  | `false`                                     | Output logs in JSON format                          |
 | `toFile`        | `string[]` | `['log', 'info', 'warn', 'debug', 'error']` | Log tags to write to file                           |
 | `toStdout`      | `string[]` | `['log', 'info', 'warn', 'debug', 'error']` | Log tags to write to stdout                         |
-| `createStream`  | `function` | `fs.createWriteStream`                      | Custom stream factory function                      |
-| `crash`         | `string`   | `undefined`                                 | Crash handling mode ('flush' to flush on exit)      |
+| `createStream`  | `function` | `fs.createWriteStream`                      | Factory `(filePath, { flags: 'a' }) => stream`      |
+| `crash`         | `'flush'`  | `undefined`                                 | Flush on signals, exceptions, `beforeExit`, `exit`  |
 
 ### Log Tags
 
@@ -168,8 +167,11 @@ const logger = await Logger.create({
   json: true,
 });
 
-logger.console.info('User action', { userId: 123, action: 'login' });
+logger.console.info({ userId: 123, action: 'login' }, 'User action');
 // Output: {"timestamp":"2025-01-07T10:30:00.000Z","worker":"W0","tag":"info","message":"User action","userId":123,"action":"login"}
+
+// A leading non-null object is merged into the JSON record.
+// `null` and primitives become part of `message`.
 ```
 
 ### Log Rotation and Cleanup
@@ -195,7 +197,7 @@ await logger.rotate();
 const logger = await Logger.create({
   path: './log',
   home: process.cwd(),
-  crash: 'flush', // Flush buffer on process exit
+  crash: 'flush', // Flush on signals, exceptions, beforeExit, and exit
 });
 
 logger.on('error', (error) => {
@@ -228,21 +230,28 @@ new Logger(options: LoggerOptions): Promise<Logger>
 - `open(): Promise<Logger>` - Open log file and start logging
 - `close(): Promise<void>` - Close logger and flush remaining data
 - `rotate(): Promise<void>` - Manually trigger log rotation
-- `write(tag: string, indent: number, args: unknown[]): void` - Low-level write method
+- `write(tag: LogTag, indent: number, args: unknown[]): void` - Low-level write method
 - `flush(callback?: (error?: Error) => void): void` - Flush buffer to disk
 
 #### Properties
 
 - `active: boolean` - Whether logger is currently active
 - `path: string` - Log directory path
-- `home: string` - Home directory for path normalization
+- `home?: string` - Home directory for path normalization
 - `console: Console` - Console instance for logging
+
+#### Events
+
+- `error` - File, directory, or rotation errors
+- `close` - Logger has closed
+
+File writes after `close()` are skipped. Closing is safe if the stream is already destroyed.
 
 ### BufferedStream Class
 
 ```js
 const stream = new BufferedStream({
-  stream: fs.createWriteStream('output.log'),
+  stream: fs.createWriteStream('output.log'), // required
   writeBuffer: 32 * 1024, // 32KB buffer
   flushInterval: 5000, // 5 second flush interval
 });
