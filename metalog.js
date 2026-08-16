@@ -107,7 +107,8 @@ class BufferedStream extends EventEmitter {
     if (!stream) throw new Error('Stream is required');
     this.#writable = stream;
     if (writeBuffer) this.#threshold = writeBuffer;
-    const flushEvery = flushInterval > 0 ? flushInterval : DEFAULT_FLUSH_INTERVAL;
+    let flushEvery = DEFAULT_FLUSH_INTERVAL;
+    if (flushInterval > 0) flushEvery = flushInterval;
     this.#flushTimer = setInterval(() => void this.flush(), flushEvery);
   }
 
@@ -196,7 +197,7 @@ class Formatter {
     if (metautil.isError(head)) {
       json.error = this.expandError(head);
       start = 1;
-    } else if (typeof head === 'object') {
+    } else if (head !== null && typeof head === 'object') {
       Object.assign(json, head);
       start = 1;
     }
