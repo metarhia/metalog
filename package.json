@@ -1,6 +1,6 @@
 {
   "name": "metalog",
-  "version": "4.0.3-prerelease",
+  "version": "4.0.4-prerelease",
   "author": "Timur Shemsedinov <timur.shemsedinov@gmail.com>",
   "description": "Logger for Metarhia",
   "license": "MIT",
@@ -56,11 +56,11 @@
     "metautil": "^5.5.2"
   },
   "devDependencies": {
-    "@types/node": "^25.9.4",
-    "eslint": "^9.39.4",
-    "eslint-config-metarhia": "^9.1.9",
-    "metaskills": "^1.0.4",
-    "prettier": "^3.8.4",
+    "@types/node": "^25.9.5",
+    "eslint": "^9.39.5",
+    "eslint-config-metarhia": "^9.2.1",
+    "metaskills": "^1.0.5",
+    "prettier": "^3.9.6",
     "typescript": "^5.9.3"
   }
 }

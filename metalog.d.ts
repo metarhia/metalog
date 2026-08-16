@@ -1,21 +1,27 @@
 import { EventEmitter } from 'node:events';
+import { InspectOptions } from 'node:util';
+
+export type LogTag = 'log' | 'info' | 'warn' | 'debug' | 'error';
 
 interface LoggerOptions {
   path: string;
-  home: string;
+  home?: string;
   workerId?: number;
-  createStream?: () => NodeJS.WritableStream;
+  createStream?: (
+    filePath: string,
+    options?: { flags?: string },
+  ) => NodeJS.WritableStream;
   writeBuffer?: number;
   flushInterval?: number;
   keepDays?: number;
   json?: boolean;
-  toFile?: Array<string>;
-  toStdout?: Array<string>;
-  crash?: string;
+  toFile?: Array<LogTag>;
+  toStdout?: Array<LogTag>;
+  crash?: 'flush';
 }
 
 interface BufferedStreamOptions {
-  stream?: NodeJS.WritableStream;
+  stream: NodeJS.WritableStream;
   writeBuffer?: number;
   flushInterval?: number;
 }
@@ -27,7 +33,7 @@ interface FormatterOptions {
 }
 
 export class BufferedStream extends EventEmitter {
-  constructor(options?: BufferedStreamOptions);
+  constructor(options: BufferedStreamOptions);
   write(buffer: Buffer): void;
   flush(callback?: (error?: Error) => void): void;
   close(): Promise<void>;
@@ -35,11 +41,11 @@ export class BufferedStream extends EventEmitter {
 
 export class Formatter {
   constructor(options?: FormatterOptions);
-  format(tag: string, indent: number, args: unknown[]): string;
-  formatPretty(tag: string, indent: number, args: unknown[]): string;
-  formatFile(tag: string, indent: number, args: unknown[]): string;
-  formatJson(tag: string, indent: number, args: unknown[]): string;
-  normalizeStack(stack: string): string;
+  format(tag: LogTag, indent: number, args: unknown[]): string;
+  formatPretty(tag: LogTag, indent: number, args: unknown[]): string;
+  formatFile(tag: LogTag, indent: number, args: unknown[]): string;
+  formatJson(tag: LogTag, indent: number, args: unknown[]): string;
+  normalizeStack(stack?: string | null): string;
   expandError(error: Error): unknown;
 }
 
@@ -49,8 +55,8 @@ export class Console {
   clear(): void;
   count(label?: string): void;
   countReset(label?: string): void;
-  debug(data: unknown, ...args: unknown[]): void;
-  dir(obj: unknown, options?: unknown): void;
+  debug(data?: unknown, ...args: unknown[]): void;
+  dir(obj: unknown, options?: InspectOptions): void;
   dirxml(...data: unknown[]): void;
   error(data?: unknown, ...args: unknown[]): void;
   group(...label: unknown[]): void;
@@ -69,7 +75,7 @@ export class Console {
 export class Logger extends EventEmitter {
   active: boolean;
   path: string;
-  home: string;
+  home?: string;
   console: Console;
 
   constructor(options: LoggerOptions);
@@ -77,7 +83,7 @@ export class Logger extends EventEmitter {
   open(): Promise<Logger>;
   close(): Promise<void>;
   rotate(): Promise<void>;
-  write(tag: string, indent: number, args: unknown[]): void;
+  write(tag: LogTag, indent: number, args: unknown[]): void;
   flush(callback?: (error?: Error) => void): void;
 }
 
