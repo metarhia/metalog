@@ -1,9 +1,10 @@
 'use strict';
 
 const test = require('node:test');
-const { BufferedStream } = require('../metalog');
 const fs = require('node:fs');
 const path = require('node:path');
+
+const { BufferedStream } = require('../metalog.js');
 
 test('BufferedStream with stream', async () => {
   const logDir = './log';
@@ -47,7 +48,9 @@ test('BufferedStream timer management', async () => {
 
   bufferedStream.write(Buffer.from('Timer test message\n'));
 
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => {
+    setTimeout(resolve, 200);
+  });
 
   await bufferedStream.close();
   stream.destroy();
@@ -70,7 +73,9 @@ test('BufferedStream auto-flush on threshold', async () => {
     bufferedStream.write(Buffer.from(`Message ${i}\n`));
   }
 
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => {
+    setTimeout(resolve, 100);
+  });
   await bufferedStream.close();
   stream.destroy();
 });

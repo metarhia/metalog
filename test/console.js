@@ -1,6 +1,7 @@
 'use strict';
 
 const test = require('node:test');
+
 const { Console, Logger } = require('..');
 
 test('Console basic methods', async () => {

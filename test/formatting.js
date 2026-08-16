@@ -1,7 +1,8 @@
 'use strict';
 
 const test = require('node:test');
-const { Formatter } = require('../metalog');
+
+const { Formatter } = require('../metalog.js');
 
 test('Formatter basic formatting', () => {
   const formatter = new Formatter({
@@ -166,12 +167,21 @@ test('Formatter JSON with mixed arguments', () => {
   }
 });
 
-test('Formatter default options', () => {
-  const formatter = new Formatter();
+test('Formatter JSON with null head', () => {
+  const formatter = new Formatter({
+    json: true,
+    worker: 'W9',
+    home: '/test/home',
+  });
 
-  const formatted = formatter.format('info', 0, ['Default test']);
-  if (!formatted.includes('Default test')) {
-    throw new Error('Default formatter failed');
+  const json = formatter.formatJson('info', 0, [null, 'after null']);
+  const parsed = JSON.parse(json);
+
+  if (parsed.message !== 'null after null') {
+    throw new Error(`Null head mishandled: ${parsed.message}`);
+  }
+  if (Object.hasOwn(parsed, 'null')) {
+    throw new Error('Null was incorrectly assigned as object');
   }
 });
 

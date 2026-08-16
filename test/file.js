@@ -1,6 +1,7 @@
 'use strict';
 
 const test = require('node:test');
+
 const { Logger } = require('..');
 
 const createLogger = () =>
