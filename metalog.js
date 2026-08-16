@@ -6,6 +6,7 @@ const path = require('node:path');
 const util = require('node:util');
 const EventEmitter = require('node:events');
 const readline = require('node:readline');
+
 const metautil = require('metautil');
 const concolor = require('concolor');
 
@@ -30,6 +31,7 @@ const CRASH_EVENTS = [
   'SIGUSR2',
   'uncaughtException',
   'unhandledRejection',
+  'beforeExit',
   'exit',
 ];
 
@@ -105,8 +107,8 @@ class BufferedStream extends EventEmitter {
     if (!stream) throw new Error('Stream is required');
     this.#writable = stream;
     if (writeBuffer) this.#threshold = writeBuffer;
-    const interval = flushInterval || DEFAULT_FLUSH_INTERVAL;
-    this.#flushTimer = setInterval(() => void this.flush(), interval);
+    const flushEvery = flushInterval > 0 ? flushInterval : DEFAULT_FLUSH_INTERVAL;
+    this.#flushTimer = setInterval(() => void this.flush(), flushEvery);
   }
 
   write(buffer) {
@@ -134,6 +136,7 @@ class BufferedStream extends EventEmitter {
     this.#size = 0;
     this.#writable.write(buffer, (error) => {
       this.#flushing = false;
+      if (!error && this.#size > 0) return void this.flush(callback);
       this.emit('drain');
       if (callback) callback(error);
     });
@@ -243,7 +246,7 @@ class Console {
   }
 
   count(label = 'default') {
-    const current = this.#counts.get(label) || 0;
+    const current = this.#counts.get(label) ?? 0;
     const countValue = current + 1;
     this.#counts.set(label, countValue);
     this.#logger.write('debug', this.#groupIndent, [`${label}: ${countValue}`]);
@@ -310,9 +313,7 @@ class Console {
       data = data.map((item) => {
         const record = {};
         for (const prop of properties) {
-          if (Object.prototype.hasOwnProperty.call(item, prop)) {
-            record[prop] = item[prop];
-          }
+          if (Object.hasOwn(item, prop)) record[prop] = item[prop];
         }
         return record;
       });
@@ -430,13 +431,17 @@ class Logger extends EventEmitter {
       this.emit('close');
       return;
     }
-    const stream = this.#stream;
-    if (stream.destroyed || stream.closed) return;
     clearTimeout(this.#rotationTimer);
     this.#rotationTimer = null;
     this.active = false;
-    await this.#buffer.close();
+    const stream = this.#stream;
+    const buffer = this.#buffer;
+    this.#buffer = null;
+    if (buffer && stream && !stream.destroyed && !stream.closed) {
+      await buffer.close();
+    }
     this.emit('close');
+    if (!this.#file) return;
     try {
       const stats = await fsp.stat(this.#file);
       if (stats.size === 0) {
@@ -484,7 +489,7 @@ class Logger extends EventEmitter {
 
   write(tag, indent, args) {
     const toStdout = this.#toStdout[tag];
-    const toFile = this.#toFile[tag];
+    const toFile = this.#toFile[tag] && this.#buffer;
     if (!toStdout && !toFile) return;
     if (this.#options.json) {
       const line = `${this.#formatter.formatJson(tag, indent, args)}\n`;

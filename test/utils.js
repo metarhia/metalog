@@ -1,6 +1,7 @@
 'use strict';
 
 const test = require('node:test');
+
 const { nowDays, nameToDays } = require('..');
 
 test('nowDays utility function', () => {

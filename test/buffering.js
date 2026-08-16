@@ -1,9 +1,10 @@
 'use strict';
 
 const test = require('node:test');
-const { BufferedStream } = require('../metalog');
 const fs = require('node:fs');
 const path = require('node:path');
+
+const { BufferedStream } = require('../metalog.js');
 
 test('BufferedStream with stream', async () => {
   const logDir = './log';
