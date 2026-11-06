@@ -85,7 +85,8 @@ test('nameToDays with invalid date', () => {
     throw new Error('Should throw error for invalid dates');
   } catch (error) {
     if (!error.message.includes('Invalid filename')) {
-      throw new Error('Should throw specific error for invalid dates');
+      const message = 'Should throw specific error for invalid dates';
+      throw new Error(message, { cause: error });
     }
   }
 });
@@ -97,7 +98,8 @@ test('nameToDays with short filename', () => {
     throw new Error('Should throw error for short filenames');
   } catch (error) {
     if (!error.message.includes('Invalid filename')) {
-      throw new Error('Should throw specific error for short filenames');
+      const message = 'Should throw specific error for short filenames';
+      throw new Error(message, { cause: error });
     }
   }
 });
@@ -109,7 +111,8 @@ test('nameToDays with empty filename', () => {
     throw new Error('Should throw error for empty filename');
   } catch (error) {
     if (!error.message.includes('Invalid filename')) {
-      throw new Error('Should throw specific error for empty filename');
+      const message = 'Should throw specific error for empty filename';
+      throw new Error(message, { cause: error });
     }
   }
 });
