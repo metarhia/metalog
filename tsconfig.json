@@ -3,6 +3,7 @@
     "target": "ESNext",
     "module": "nodenext",
     "strict": true,
+    "types": ["node"],
     "noEmit": true,
     "preserveWatchOutput": true
   },
